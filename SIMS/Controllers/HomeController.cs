@@ -8,16 +8,14 @@ using SIMS.Models;
 
 namespace SIMS.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BaseController
     {
         private readonly ILogger<HomeController> _logger;
-        private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _context;
 
-        public HomeController(ILogger<HomeController> logger, UserManager<User> userManager, ApplicationDbContext context)
+        public HomeController(ILogger<HomeController> logger, UserManager<User> userManager, ApplicationDbContext context) : base(userManager)
         {
             _logger = logger;
-            _userManager = userManager;
             _context = context;
         }
 
@@ -33,7 +31,7 @@ namespace SIMS.Controllers
         [Authorize]
         public async Task<IActionResult> Dashboard()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await base._userManager.GetUserAsync(User);
             if (user == null)
             {
                 return RedirectToAction("Login", "Account");

@@ -7,16 +7,14 @@ using SIMS.Models;
 
 namespace SIMS.Controllers
 {
-    [Authorize(Roles = "admin")]
-    public class AdminController : Controller
+    [Authorize(Roles = "Admin")]
+    public class AdminController : BaseController
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<User> _userManager;
 
-        public AdminController(ApplicationDbContext context, UserManager<User> userManager)
+        public AdminController(ApplicationDbContext context, UserManager<User> userManager) : base(userManager)
         {
             _context = context;
-            _userManager = userManager;
         }
 
         public IActionResult Index()
@@ -135,7 +133,7 @@ namespace SIMS.Controllers
         // Manage Users
         public async Task<IActionResult> ManageUsers()
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = await base._userManager.Users.ToListAsync();
             return View(users);
         }
 

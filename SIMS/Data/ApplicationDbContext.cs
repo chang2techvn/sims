@@ -29,16 +29,31 @@ namespace SIMS.Data
             builder.Entity<StudentCourse>()
                 .HasKey(sc => new { sc.StudentId, sc.CourseId });
 
-            // Configure relationships
+            // Configure relationships with NO ACTION to avoid cascade conflicts
             builder.Entity<StudentCourse>()
                 .HasOne(sc => sc.Student)
                 .WithMany(s => s.StudentCourses)
-                .HasForeignKey(sc => sc.StudentId);
+                .HasForeignKey(sc => sc.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<StudentCourse>()
                 .HasOne(sc => sc.Course)
                 .WithMany(c => c.StudentCourses)
-                .HasForeignKey(sc => sc.CourseId);
+                .HasForeignKey(sc => sc.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Course relationships with NO ACTION to avoid cascade conflicts
+            builder.Entity<Course>()
+                .HasOne(c => c.Major)
+                .WithMany(m => m.Courses)
+                .HasForeignKey(c => c.MajorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Course>()
+                .HasOne(c => c.Lecturer)
+                .WithMany(l => l.Courses)
+                .HasForeignKey(c => c.LecturerId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Configure one-to-one relationships
             builder.Entity<Student>()

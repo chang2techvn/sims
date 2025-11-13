@@ -41,29 +41,53 @@
                             </a>
                         </li>
 
-                        @if (User.IsInRole("admin") || ViewBag.UserRole == "admin")
+                        @if (User.IsInRole("Admin") || (ViewBag.UserRole?.ToString()?.ToLower() == "admin"))
                         {
                             <li class="nav-item">
-                                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#adminMenu">
-                                    <i class="fas fa-user-shield"></i>
-                                    <span>Admin Panel</span>
-                                    <i class="fas fa-chevron-down ms-auto"></i>
+                                <a href="@Url.Action("ManageUsers", "Admin")" class="nav-link">
+                                    <i class="fas fa-users"></i>
+                                    <span>Manage Users</span>
                                 </a>
-                                <div class="collapse" id="adminMenu">
-                                    <ul class="nav-submenu">
-                                        <li><a href="@Url.Action("ManageUsers", "Admin")">Manage Users</a></li>
-                                        <li><a href="@Url.Action("ManageDepartments", "Admin")">Departments</a></li>
-                                        <li><a href="@Url.Action("ManageMajors", "Admin")">Majors</a></li>
-                                        <li><a href="@Url.Action("ManageSemesters", "Admin")">Semesters</a></li>
-                                        <li><a href="@Url.Action("ManageSubjects", "Admin")">Subjects</a></li>
-                                        <li><a href="@Url.Action("ManageCourses", "Admin")">Courses</a></li>
-                                        <li><a href="@Url.Action("AssignStudentToCourse", "Admin")">Assign Students</a></li>
-                                    </ul>
-                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("ManageDepartments", "Admin")" class="nav-link">
+                                    <i class="fas fa-building"></i>
+                                    <span>Departments</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("ManageMajors", "Admin")" class="nav-link">
+                                    <i class="fas fa-graduation-cap"></i>
+                                    <span>Majors</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("ManageSemesters", "Admin")" class="nav-link">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Semesters</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("ManageSubjects", "Admin")" class="nav-link">
+                                    <i class="fas fa-book"></i>
+                                    <span>Subjects</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("ManageCourses", "Admin")" class="nav-link">
+                                    <i class="fas fa-chalkboard"></i>
+                                    <span>Courses</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("AssignStudentToCourse", "Admin")" class="nav-link">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Assign Students</span>
+                                </a>
                             </li>
                         }
 
-                        @if (User.IsInRole("student") || ViewBag.UserRole == "student")
+                        @if (User.IsInRole("Student") || (ViewBag.UserRole?.ToString()?.ToLower() == "student"))
                         {
                             <li class="nav-item">
                                 <a href="@Url.Action("Register", "Student")" class="nav-link">
@@ -85,7 +109,7 @@
                             </li>
                         }
 
-                        @if (User.IsInRole("lecturer") || ViewBag.UserRole == "lecturer")
+                        @if (User.IsInRole("Lecturer") || (ViewBag.UserRole?.ToString()?.ToLower() == "lecturer"))
                         {
                             <li class="nav-item">
                                 <a href="@Url.Action("MyCourses", "Lecturer")" class="nav-link">
