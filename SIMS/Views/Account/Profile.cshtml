@@ -1,0 +1,142 @@
+@model SIMS.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user"></i> Profile Information</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="user-avatar mb-4">
+                    @if (!string.IsNullOrEmpty(Model.Avatar))
+                    {
+                        <img src="@Model.Avatar" alt="Avatar" class="rounded-circle" width="150" height="150">
+                    }
+                    else
+                    {
+                        <i class="fas fa-user-circle" style="font-size: 150px; color: var(--primary-orange);"></i>
+                    }
+                </div>
+                <h4 class="card-title">@Model.Name</h4>
+                <p class="text-muted text-capitalize">@Model.Role</p>
+                @if (!string.IsNullOrEmpty(Model.MajorName))
+                {
+                    <span class="badge bg-primary">@Model.MajorName</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.DepartmentName))
+                {
+                    <span class="badge bg-secondary">@Model.DepartmentName</span>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Personal Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-envelope text-primary"></i> Email:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        @Model.Email
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Phone))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-phone text-success"></i> Phone:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.Phone
+                        </div>
+                    </div>
+                }
+                
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-birthday-cake text-warning"></i> Age:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        @Model.Age years old
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.Gender))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-venus-mars text-info"></i> Gender:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.Gender
+                        </div>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model.Address))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-map-marker-alt text-danger"></i> Address:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.Address
+                        </div>
+                    </div>
+                }
+                
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-user-tag text-secondary"></i> Role:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="badge bg-primary text-capitalize">@Model.Role</span>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.MajorName))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-graduation-cap text-primary"></i> Major:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.MajorName
+                        </div>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model.DepartmentName))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-building text-secondary"></i> Department:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.DepartmentName
+                        </div>
+                    </div>
+                }
+                
+                <hr>
+                <div class="text-center">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

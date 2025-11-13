@@ -1,0 +1,115 @@
+@model List<SIMS.Models.Major>
+@{
+    ViewData["Title"] = "Manage Majors";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-graduation-cap"></i> Majors List</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Major Name</th>
+                                    <th>Department</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var major in Model)
+                                {
+                                    <tr>
+                                        <td>@major.MajorId</td>
+                                        <td>
+                                            <strong>@major.Name</strong>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">@major.Department.Name</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-graduation-cap text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No majors found. Create your first major!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-plus"></i> Add New Major</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateMajor" method="post">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-graduation-cap"></i> Major Name
+                        </label>
+                        <input name="Name" class="form-control" placeholder="Enter major name" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-building"></i> Department
+                        </label>
+                        <select name="DepartmentId" class="form-control form-select" required>
+                            <option value="">Select Department</option>
+                            @foreach (var department in ViewBag.Departments as List<SIMS.Models.Department>)
+                            {
+                                <option value="@department.DepartmentId">@department.Name</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Add Major
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-pie"></i> Majors by Department</h6>
+            </div>
+            <div class="card-body">
+                @foreach (var deptGroup in Model.GroupBy(m => m.Department.Name))
+                {
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <small>@deptGroup.Key</small>
+                            <small class="badge bg-primary">@deptGroup.Count()</small>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar" style="width: @(deptGroup.Count() * 100.0 / Model.Count)%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

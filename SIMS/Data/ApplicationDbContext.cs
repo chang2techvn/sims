@@ -1,0 +1,85 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+using SIMS.Models;
+
+namespace SIMS.Data
+{
+    public class ApplicationDbContext : IdentityDbContext<User>
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Major> Majors { get; set; }
+        public DbSet<Student> Students { get; set; }
+        public DbSet<Lecturer> Lecturers { get; set; }
+        public DbSet<Admin> Admins { get; set; }
+        public DbSet<Semester> Semesters { get; set; }
+        public DbSet<Subject> Subjects { get; set; }
+        public DbSet<Course> Courses { get; set; }
+        public DbSet<StudentCourse> StudentCourses { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            // Configure composite key for StudentCourse
+            builder.Entity<StudentCourse>()
+                .HasKey(sc => new { sc.StudentId, sc.CourseId });
+
+            // Configure relationships
+            builder.Entity<StudentCourse>()
+                .HasOne(sc => sc.Student)
+                .WithMany(s => s.StudentCourses)
+                .HasForeignKey(sc => sc.StudentId);
+
+            builder.Entity<StudentCourse>()
+                .HasOne(sc => sc.Course)
+                .WithMany(c => c.StudentCourses)
+                .HasForeignKey(sc => sc.CourseId);
+
+            // Configure one-to-one relationships
+            builder.Entity<Student>()
+                .HasOne(s => s.User)
+                .WithOne(u => u.Student)
+                .HasForeignKey<Student>(s => s.UserId);
+
+            builder.Entity<Lecturer>()
+                .HasOne(l => l.User)
+                .WithOne(u => u.Lecturer)
+                .HasForeignKey<Lecturer>(l => l.UserId);
+
+            builder.Entity<Admin>()
+                .HasOne(a => a.User)
+                .WithOne(u => u.Admin)
+                .HasForeignKey<Admin>(a => a.UserId);
+
+            // Seed data
+            builder.Entity<Department>().HasData(
+                new Department { DepartmentId = 1, Name = "Computer Science" },
+                new Department { DepartmentId = 2, Name = "Business Administration" },
+                new Department { DepartmentId = 3, Name = "Engineering" }
+            );
+
+            builder.Entity<Major>().HasData(
+                new Major { MajorId = 1, Name = "Software Engineering", DepartmentId = 1 },
+                new Major { MajorId = 2, Name = "Information Technology", DepartmentId = 1 },
+                new Major { MajorId = 3, Name = "Marketing", DepartmentId = 2 },
+                new Major { MajorId = 4, Name = "Mechanical Engineering", DepartmentId = 3 }
+            );
+
+            builder.Entity<Semester>().HasData(
+                new Semester { SemesterId = 1, Name = "Fall", Year = "2024" },
+                new Semester { SemesterId = 2, Name = "Spring", Year = "2025" }
+            );
+
+            builder.Entity<Subject>().HasData(
+                new Subject { SubjectId = 1, Code = "CS101", Name = "Introduction to Programming" },
+                new Subject { SubjectId = 2, Code = "CS201", Name = "Data Structures and Algorithms" },
+                new Subject { SubjectId = 3, Code = "BU101", Name = "Business Fundamentals" }
+            );
+        }
+    }
+}

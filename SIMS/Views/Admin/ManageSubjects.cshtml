@@ -1,0 +1,97 @@
+@model List<SIMS.Models.Subject>
+@{
+    ViewData["Title"] = "Manage Subjects";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-book-open"></i> Subjects List</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject Name</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var subject in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">@subject.Code</span>
+                                        </td>
+                                        <td>
+                                            <strong>@subject.Name</strong>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-book-open text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No subjects found. Create your first subject!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-plus"></i> Add New Subject</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateSubject" method="post">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-code"></i> Subject Code
+                        </label>
+                        <input name="Code" class="form-control" placeholder="e.g., CS101" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-book-open"></i> Subject Name
+                        </label>
+                        <input name="Name" class="form-control" placeholder="Enter subject name" required />
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Add Subject
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-info-circle"></i> Subject Statistics</h6>
+            </div>
+            <div class="card-body text-center">
+                <h4 class="text-primary">@Model.Count()</h4>
+                <p class="text-muted mb-0">Total Subjects</p>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,116 @@
+@model List<SIMS.Models.User>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="card">
+    <div class="card-header">
+        <h5><i class="fas fa-users"></i> System Users</h5>
+    </div>
+    <div class="card-body">
+        @if (Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Avatar</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Phone</th>
+                            <th>Age</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(user.Avatar))
+                                    {
+                                        <img src="@user.Avatar" alt="Avatar" class="rounded-circle" width="40" height="40">
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-user-circle text-primary" style="font-size: 2.5rem;"></i>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@user.Name</strong>
+                                </td>
+                                <td>@user.Email</td>
+                                <td>
+                                    <span class="badge bg-primary text-capitalize">@user.Role</span>
+                                </td>
+                                <td>@user.Phone</td>
+                                <td>@user.Age</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" title="Edit User">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" title="Delete User">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4">
+                <i class="fas fa-users text-muted" style="font-size: 3rem;"></i>
+                <p class="text-muted mt-3">No users found in the system.</p>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-user-graduate text-primary" style="font-size: 2rem;"></i>
+                <h6 class="mt-2">Students</h6>
+                <h4 class="text-primary">@Model.Count(u => u.Role == "student")</h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-chalkboard-teacher text-success" style="font-size: 2rem;"></i>
+                <h6 class="mt-2">Lecturers</h6>
+                <h4 class="text-success">@Model.Count(u => u.Role == "lecturer")</h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-user-shield text-warning" style="font-size: 2rem;"></i>
+                <h6 class="mt-2">Admins</h6>
+                <h4 class="text-warning">@Model.Count(u => u.Role == "admin")</h4>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="fas fa-users text-info" style="font-size: 2rem;"></i>
+                <h6 class="mt-2">Total Users</h6>
+                <h4 class="text-info">@Model.Count()</h4>
+            </div>
+        </div>
+    </div>
+</div>

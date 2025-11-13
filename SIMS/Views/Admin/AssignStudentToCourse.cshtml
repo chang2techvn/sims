@@ -1,0 +1,132 @@
+@model List<SIMS.Models.StudentCourse>
+@{
+    ViewData["Title"] = "Assign Students to Courses";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user-plus"></i> Current Student-Course Assignments</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Course</th>
+                                    <th>Subject</th>
+                                    <th>Major</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var assignment in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@assignment.Student.User.Name</strong>
+                                            <br><small class="text-muted">@assignment.Student.User.Email</small>
+                                        </td>
+                                        <td>@assignment.Course.CourseName</td>
+                                        <td>
+                                            @assignment.Course.Subject.Name
+                                            <br><small class="text-muted">@assignment.Course.Subject.Code</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">@assignment.Student.Major.Name</span>
+                                        </td>
+                                        <td>
+                                            <form asp-action="RemoveStudentFromCourse" method="post" class="d-inline">
+                                                <input type="hidden" name="studentId" value="@assignment.StudentId" />
+                                                <input type="hidden" name="courseId" value="@assignment.CourseId" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="return confirm('Remove this student from the course?')" 
+                                                        title="Remove Assignment">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-graduate text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No student-course assignments found.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-plus"></i> Assign Student to Course</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="AssignStudentToCourse" method="post">
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user-graduate"></i> Select Student
+                        </label>
+                        <select name="studentId" class="form-control form-select" required>
+                            <option value="">Choose Student</option>
+                            @foreach (var student in ViewBag.Students as List<SIMS.Models.Student>)
+                            {
+                                <option value="@student.StudentId">
+                                    @student.User.Name (@student.Major.Name)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-book"></i> Select Course
+                        </label>
+                        <select name="courseId" class="form-control form-select" required>
+                            <option value="">Choose Course</option>
+                            @foreach (var course in ViewBag.Courses as List<SIMS.Models.Course>)
+                            {
+                                <option value="@course.CourseId">
+                                    @course.Subject.Name - @course.Major.Name
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-user-plus"></i> Assign to Course
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-3">
+            <div class="card-header">
+                <h6><i class="fas fa-chart-bar"></i> Assignment Statistics</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <h4 class="text-primary">@Model.Count()</h4>
+                    <p class="text-muted mb-0">Total Assignments</p>
+                </div>
+                <hr>
+                <small class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    Students: @Model.Select(m => m.StudentId).Distinct().Count() | 
+                    Courses: @Model.Select(m => m.CourseId).Distinct().Count()
+                </small>
+            </div>
+        </div>
+    </div>
+</div>

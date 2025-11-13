@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SIMS</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    @if (User.Identity!.IsAuthenticated)
+    {
+        <div class="dashboard-container">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>SIMS</span>
+                    </div>
+                </div>
+                
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <h6>@User.Identity.Name</h6>
+                        <small>@ViewBag.UserRole</small>
+                    </div>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <ul class="nav-menu">
+                        <li class="nav-item">
+                            <a href="@Url.Action("Dashboard", "Home")" class="nav-link">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>Dashboard</span>
+                            </a>
+                        </li>
+
+                        @if (User.IsInRole("admin") || ViewBag.UserRole == "admin")
+                        {
+                            <li class="nav-item">
+                                <a href="#" class="nav-link" data-bs-toggle="collapse" data-bs-target="#adminMenu">
+                                    <i class="fas fa-user-shield"></i>
+                                    <span>Admin Panel</span>
+                                    <i class="fas fa-chevron-down ms-auto"></i>
+                                </a>
+                                <div class="collapse" id="adminMenu">
+                                    <ul class="nav-submenu">
+                                        <li><a href="@Url.Action("ManageUsers", "Admin")">Manage Users</a></li>
+                                        <li><a href="@Url.Action("ManageDepartments", "Admin")">Departments</a></li>
+                                        <li><a href="@Url.Action("ManageMajors", "Admin")">Majors</a></li>
+                                        <li><a href="@Url.Action("ManageSemesters", "Admin")">Semesters</a></li>
+                                        <li><a href="@Url.Action("ManageSubjects", "Admin")">Subjects</a></li>
+                                        <li><a href="@Url.Action("ManageCourses", "Admin")">Courses</a></li>
+                                        <li><a href="@Url.Action("AssignStudentToCourse", "Admin")">Assign Students</a></li>
+                                    </ul>
+                                </div>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("student") || ViewBag.UserRole == "student")
+                        {
+                            <li class="nav-item">
+                                <a href="@Url.Action("Register", "Student")" class="nav-link">
+                                    <i class="fas fa-user-plus"></i>
+                                    <span>Register</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("MyCourses", "Student")" class="nav-link">
+                                    <i class="fas fa-book"></i>
+                                    <span>My Courses</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("AvailableCourses", "Student")" class="nav-link">
+                                    <i class="fas fa-search"></i>
+                                    <span>Available Courses</span>
+                                </a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("lecturer") || ViewBag.UserRole == "lecturer")
+                        {
+                            <li class="nav-item">
+                                <a href="@Url.Action("MyCourses", "Lecturer")" class="nav-link">
+                                    <i class="fas fa-chalkboard-teacher"></i>
+                                    <span>My Courses</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="@Url.Action("ViewAssignedClasses", "Lecturer")" class="nav-link">
+                                    <i class="fas fa-users"></i>
+                                    <span>Assigned Classes</span>
+                                </a>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <a href="@Url.Action("Profile", "Account")" class="nav-link">
+                                <i class="fas fa-user"></i>
+                                <span>Profile</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <form asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="btn btn-logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <header class="header">
+                    <div class="header-content">
+                        <div class="header-title">
+                            <h1>@ViewData["Title"]</h1>
+                        </div>
+                        <div class="header-actions">
+                            <div class="notifications">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="content">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+    }
+    else
+    {
+        @RenderBody()
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

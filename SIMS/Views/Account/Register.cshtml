@@ -1,0 +1,211 @@
+@model SIMS.Models.ViewModels.RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register - SIMS</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card" style="max-width: 600px;">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h2>Create Account</h2>
+                <p>Join the Student Information Management System</p>
+            </div>
+
+            @if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <li>@error.ErrorMessage</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <form asp-action="Register" method="post">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Name" class="form-label">
+                                <i class="fas fa-user"></i> Full Name
+                            </label>
+                            <input asp-for="Name" class="form-control" placeholder="Enter full name" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email Address
+                            </label>
+                            <input asp-for="Email" class="form-control" placeholder="Enter email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Password" class="form-label">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input asp-for="Password" class="form-control" type="password" placeholder="Enter password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="ConfirmPassword" class="form-label">
+                                <i class="fas fa-lock"></i> Confirm Password
+                            </label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="Confirm password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Phone" class="form-label">
+                                <i class="fas fa-phone"></i> Phone Number
+                            </label>
+                            <input asp-for="Phone" class="form-control" placeholder="Enter phone number" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Age" class="form-label">
+                                <i class="fas fa-calendar"></i> Age
+                            </label>
+                            <input asp-for="Age" class="form-control" type="number" placeholder="Enter age" />
+                            <span asp-validation-for="Age" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Gender" class="form-label">
+                                <i class="fas fa-venus-mars"></i> Gender
+                            </label>
+                            <select asp-for="Gender" class="form-control form-select">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Role" class="form-label">
+                                <i class="fas fa-user-tag"></i> Role
+                            </label>
+                            <select asp-for="Role" class="form-control form-select" onchange="toggleRoleSpecificFields()">
+                                <option value="student">Student</option>
+                                <option value="lecturer">Lecturer</option>
+                                <option value="admin">Administrator</option>
+                            </select>
+                            <span asp-validation-for="Role" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Address" class="form-label">
+                        <i class="fas fa-map-marker-alt"></i> Address
+                    </label>
+                    <textarea asp-for="Address" class="form-control" rows="2" placeholder="Enter address"></textarea>
+                    <span asp-validation-for="Address" class="text-danger small"></span>
+                </div>
+
+                <div id="majorField" class="form-group">
+                    <label asp-for="MajorId" class="form-label">
+                        <i class="fas fa-graduation-cap"></i> Major
+                    </label>
+                    <select asp-for="MajorId" class="form-control form-select">
+                        <option value="">Select Major</option>
+                        @foreach (var major in ViewBag.Majors as List<SIMS.Models.Major>)
+                        {
+                            <option value="@major.MajorId">@major.Name (@major.Department.Name)</option>
+                        }
+                    </select>
+                    <span asp-validation-for="MajorId" class="text-danger small"></span>
+                </div>
+
+                <div id="departmentField" class="form-group" style="display: none;">
+                    <label asp-for="DepartmentId" class="form-label">
+                        <i class="fas fa-building"></i> Department
+                    </label>
+                    <select asp-for="DepartmentId" class="form-control form-select">
+                        <option value="">Select Department</option>
+                        @foreach (var department in ViewBag.Departments as List<SIMS.Models.Department>)
+                        {
+                            <option value="@department.DepartmentId">@department.Name</option>
+                        }
+                    </select>
+                    <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mb-3">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+
+                <div class="text-center">
+                    <p class="mb-0">Already have an account?</p>
+                    <a href="@Url.Action("Login", "Account")" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Sign In
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+    
+    <script>
+        function toggleRoleSpecificFields() {
+            const role = document.getElementById('Role').value;
+            const majorField = document.getElementById('majorField');
+            const departmentField = document.getElementById('departmentField');
+            
+            if (role === 'student') {
+                majorField.style.display = 'block';
+                departmentField.style.display = 'none';
+            } else if (role === 'lecturer') {
+                majorField.style.display = 'none';
+                departmentField.style.display = 'block';
+            } else {
+                majorField.style.display = 'none';
+                departmentField.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

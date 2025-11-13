@@ -1,0 +1,132 @@
+@model List<SIMS.Models.Course>
+@{
+    ViewData["Title"] = "Manage Courses";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-book"></i> Courses List</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Course Name</th>
+                                    <th>Subject</th>
+                                    <th>Semester</th>
+                                    <th>Major</th>
+                                    <th>Lecturer</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var course in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@course.CourseName</strong>
+                                            <br><small class="text-muted">@course.Subject.Code</small>
+                                        </td>
+                                        <td>@course.Subject.Name</td>
+                                        <td>@course.Semester.Name @course.Semester.Year</td>
+                                        <td>
+                                            <span class="badge bg-secondary">@course.Major.Name</span>
+                                        </td>
+                                        <td>@course.Lecturer.User.Name</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" title="View Students">
+                                                <i class="fas fa-users"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4">
+                        <i class="fas fa-book text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3">No courses found. Create your first course!</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-plus"></i> Add New Course</h5>
+            </div>
+            <div class="card-body">
+                <form asp-action="CreateCourse" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Course Name</label>
+                        <input name="CourseName" class="form-control" placeholder="Enter course name" required />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Subject</label>
+                        <select name="SubjectId" class="form-control form-select" required>
+                            <option value="">Select Subject</option>
+                            @foreach (var subject in ViewBag.Subjects as List<SIMS.Models.Subject>)
+                            {
+                                <option value="@subject.SubjectId">@subject.Name (@subject.Code)</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Semester</label>
+                        <select name="SemesterId" class="form-control form-select" required>
+                            <option value="">Select Semester</option>
+                            @foreach (var semester in ViewBag.Semesters as List<SIMS.Models.Semester>)
+                            {
+                                <option value="@semester.SemesterId">@semester.Name @semester.Year</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Major</label>
+                        <select name="MajorId" class="form-control form-select" required>
+                            <option value="">Select Major</option>
+                            @foreach (var major in ViewBag.Majors as List<SIMS.Models.Major>)
+                            {
+                                <option value="@major.MajorId">@major.Name</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Lecturer</label>
+                        <select name="LecturerId" class="form-control form-select" required>
+                            <option value="">Select Lecturer</option>
+                            @foreach (var lecturer in ViewBag.Lecturers as List<SIMS.Models.Lecturer>)
+                            {
+                                <option value="@lecturer.LecturerId">@lecturer.User.Name</option>
+                            }
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-plus"></i> Add Course
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
