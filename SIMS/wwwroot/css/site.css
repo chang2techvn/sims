@@ -73,7 +73,8 @@ body {
     font-size: 2rem;
 }
 
-.user-info {
+/* User info styles for both sidebar and header */
+.sidebar .user-info {
     padding: 1.5rem;
     display: flex;
     align-items: center;
@@ -86,21 +87,53 @@ body {
     backdrop-filter: blur(10px);
 }
 
-.user-avatar i {
+/* User info in header */
+.header .user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+}
+
+/* User avatar styles for sidebar */
+.sidebar .user-avatar i {
     font-size: 2.5rem;
     opacity: 0.9;
 }
 
-.user-details h6 {
+/* User avatar styles for header */
+.header .user-avatar i {
+    font-size: 2rem;
+    color: var(--primary-orange);
+}
+
+/* User details styles for sidebar */
+.sidebar .user-details h6 {
     margin: 0;
     font-weight: 600;
     font-size: 0.95rem;
+    color: var(--white);
 }
 
-.user-details small {
+.sidebar .user-details small {
     opacity: 0.8;
     text-transform: capitalize;
     font-size: 0.8rem;
+    color: var(--white);
+}
+
+/* User details styles for header */
+.header .user-details h6 {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+}
+
+.header .user-details small {
+    text-transform: capitalize;
+    font-size: 0.75rem;
+    color: var(--text-light);
 }
 
 /* Navigation */
@@ -128,7 +161,6 @@ body {
 .nav-link:hover {
     background: rgba(255, 255, 255, 0.15);
     color: var(--white);
-    transform: translateX(4px);
 }
 
 .nav-link.active {
@@ -216,7 +248,7 @@ body {
 
 .header-content {
     display: flex;
-    justify-content: between;
+    justify-content: space-between;
     align-items: center;
 }
 

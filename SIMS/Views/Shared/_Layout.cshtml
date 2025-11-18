@@ -21,16 +21,6 @@
                         <span>SIMS</span>
                     </div>
                 </div>
-                
-                <div class="user-info">
-                    <div class="user-avatar">
-                        <i class="fas fa-user-circle"></i>
-                    </div>
-                    <div class="user-details">
-                        <h6>@User.Identity.Name</h6>
-                        <small>@ViewBag.UserRole</small>
-                    </div>
-                </div>
 
                 <nav class="sidebar-nav">
                     <ul class="nav-menu">
@@ -152,6 +142,15 @@
                             <h1>@ViewData["Title"]</h1>
                         </div>
                         <div class="header-actions">
+                            <div class="user-info">
+                                <div class="user-avatar">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                                <div class="user-details">
+                                    <h6>@User.Identity.Name</h6>
+                                    <small>@ViewBag.UserRole</small>
+                                </div>
+                            </div>
                             <div class="notifications">
                                 <i class="fas fa-bell"></i>
                             </div>
