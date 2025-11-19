@@ -3,9 +3,56 @@
     ViewData["Title"] = "Manage Users";
 }
 
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-value">@ViewBag.StudentCount</div>
+            <div class="stat-label">Students</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="stat-value">@ViewBag.LecturerCount</div>
+            <div class="stat-label">Lecturers</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="stat-value">@ViewBag.AdminCount</div>
+            <div class="stat-label">Admins</div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-value">@Model.Count()</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+    </div>
+</div>
+
+<!-- Users Table Card -->
 <div class="card">
-    <div class="card-header">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <h5><i class="fas fa-users"></i> System Users</h5>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-plus"></i> Add User
+        </button>
     </div>
     <div class="card-body">
         @if (Model.Any())
@@ -15,11 +62,13 @@
                     <thead>
                         <tr>
                             <th>Avatar</th>
+                            <th>Student Code</th>
                             <th>Name</th>
                             <th>Email</th>
                             <th>Role</th>
                             <th>Phone</th>
-                            <th>Age</th>
+                            <th>Date of Birth</th>
+                            <th>Gender</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -34,26 +83,50 @@
                                     }
                                     else
                                     {
-                                        <i class="fas fa-user-circle text-primary" style="font-size: 2.5rem;"></i>
+                                        <i class="fas fa-user-circle" style="font-size: 2.5rem; color: var(--primary-orange);"></i>
                                     }
                                 </td>
                                 <td>
-                                    <strong>@user.Name</strong>
+                                    @if (!string.IsNullOrEmpty(user.StudentCode))
+                                    {
+                                        <span class="badge bg-info">@user.StudentCode</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
                                 </td>
+                                <td><strong>@user.Name</strong></td>
                                 <td>@user.Email</td>
                                 <td>
-                                    <span class="badge bg-primary text-capitalize">@user.Role</span>
+                                    @{
+                                        var badgeClass = user.Role?.ToLower() switch
+                                        {
+                                            "admin" => "bg-warning",
+                                            "lecturer" => "bg-success",
+                                            "student" => "bg-primary",
+                                            _ => "bg-secondary"
+                                        };
+                                    }
+                                    <span class="badge @badgeClass text-capitalize">@user.Role</span>
                                 </td>
-                                <td>@user.Phone</td>
-                                <td>@user.Age</td>
+                                <td>@(user.Phone ?? "N/A")</td>
                                 <td>
-                                    <button class="btn btn-sm btn-outline-primary" title="Edit User">
+                                    @if (user.DateOfBirth.HasValue)
+                                    {
+                                        @user.DateOfBirth.Value.ToString("dd/MM/yyyy")
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </td>
+                                <td>@(user.Gender ?? "N/A")</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editUser('@user.Id')" title="Edit User">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-info" title="View Details">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger" title="Delete User">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteUser('@user.Id', '@user.Name')" title="Delete User">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -73,44 +146,286 @@
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-user-graduate text-primary" style="font-size: 2rem;"></i>
-                <h6 class="mt-2">Students</h6>
-                <h4 class="text-primary">@Model.Count(u => u.Role == "student")</h4>
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus"></i> Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-chalkboard-teacher text-success" style="font-size: 2rem;"></i>
-                <h6 class="mt-2">Lecturers</h6>
-                <h4 class="text-success">@Model.Count(u => u.Role == "lecturer")</h4>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-user-shield text-warning" style="font-size: 2rem;"></i>
-                <h6 class="mt-2">Admins</h6>
-                <h4 class="text-warning">@Model.Count(u => u.Role == "admin")</h4>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="fas fa-users text-info" style="font-size: 2rem;"></i>
-                <h6 class="mt-2">Total Users</h6>
-                <h4 class="text-info">@Model.Count()</h4>
-            </div>
+            <form id="addUserForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" name="Name" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" name="Email" required />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Password *</label>
+                                <input type="password" class="form-control" name="Password" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Role *</label>
+                                <select class="form-select" name="Role" required>
+                                    <option value="">Select Role</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Lecturer">Lecturer</option>
+                                    <option value="Student">Student</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Student Code</label>
+                                <input type="text" class="form-control" name="StudentCode" placeholder="BC00132" maxlength="10" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" name="DateOfBirth" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" name="Phone" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" name="Gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="Address" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add User
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-edit"></i> Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId" name="Id" />
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="editName" name="Name" required />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="editEmail" name="Email" required readonly />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Role *</label>
+                                <select class="form-select" id="editRole" name="Role" required>
+                                    <option value="Admin">Admin</option>
+                                    <option value="Lecturer">Lecturer</option>
+                                    <option value="Student">Student</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Student Code</label>
+                                <input type="text" class="form-control" id="editStudentCode" name="StudentCode" placeholder="BC00132" maxlength="10" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="editDateOfBirth" name="DateOfBirth" />
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="editPhone" name="Phone" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Gender</label>
+                                <select class="form-select" id="editGender" name="Gender">
+                                    <option value="">Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label class="form-label">Address</label>
+                                <textarea class="form-control" id="editAddress" name="Address" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Add User Form Submit
+    $('#addUserForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        
+        $.ajax({
+            url: '@Url.Action("AddUser", "Admin")',
+            type: 'POST',
+            data: data,
+            success: function(response) {
+                if (response.success) {
+                    $('#addUserModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Error adding user. Please try again.');
+            }
+        });
+    });
+
+    // Edit User Function
+    function editUser(userId) {
+        $.ajax({
+            url: '@Url.Action("GetUser", "Admin")',
+            type: 'GET',
+            data: { id: userId },
+            success: function(user) {
+                $('#editUserId').val(user.id);
+                $('#editName').val(user.name);
+                $('#editEmail').val(user.email);
+                $('#editRole').val(user.role);
+                $('#editStudentCode').val(user.studentCode);
+                $('#editPhone').val(user.phone);
+                $('#editGender').val(user.gender);
+                $('#editAddress').val(user.address);
+                
+                if (user.dateOfBirth) {
+                    const date = new Date(user.dateOfBirth);
+                    $('#editDateOfBirth').val(date.toISOString().split('T')[0]);
+                }
+                
+                $('#editUserModal').modal('show');
+            },
+            error: function() {
+                alert('Error loading user data.');
+            }
+        });
+    }
+
+    // Edit User Form Submit
+    $('#editUserForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        
+        $.ajax({
+            url: '@Url.Action("UpdateUser", "Admin")',
+            type: 'POST',
+            data: data,
+            success: function(response) {
+                if (response.success) {
+                    $('#editUserModal').modal('hide');
+                    location.reload();
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                alert('Error updating user. Please try again.');
+            }
+        });
+    });
+
+    // Delete User Function
+    function deleteUser(userId, userName) {
+        if (confirm('Are you sure you want to delete user: ' + userName + '?')) {
+            $.ajax({
+                url: '@Url.Action("DeleteUser", "Admin")',
+                type: 'POST',
+                data: { id: userId },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('Error deleting user. Please try again.');
+                }
+            });
+        }
+    }
+</script>
+}

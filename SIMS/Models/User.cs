@@ -12,7 +12,10 @@ namespace SIMS.Models
         [StringLength(20)]
         public string? Phone { get; set; }
 
-        public int Age { get; set; }
+        [StringLength(10)]
+        public string? StudentCode { get; set; } // Mã sinh viên: BC00132
+
+        public DateTime? DateOfBirth { get; set; } // Ngày sinh thay cho Age
 
         [StringLength(10)]
         public string? Gender { get; set; }

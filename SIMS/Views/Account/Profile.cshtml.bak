@@ -1,0 +1,400 @@
+@model SIMS.Models.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-user"></i> Profile Information</h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="user-avatar mb-4">
+                    @if (!string.IsNullOrEmpty(Model.Avatar))
+                    {
+                        <img src="@Model.Avatar" alt="Avatar" class="rounded-circle" width="150" height="150">
+                    }
+                    else
+                    {
+                        <i class="fas fa-user-circle" style="font-size: 150px; color: var(--primary-orange);"></i>
+                    }
+                </div>
+                <h4 class="card-title">@Model.Name</h4>
+                <p class="text-muted text-capitalize">@Model.Role</p>
+                @if (!string.IsNullOrEmpty(Model.MajorName))
+                {
+                    <span class="badge bg-primary">@Model.MajorName</span>
+                }
+                @if (!string.IsNullOrEmpty(Model.DepartmentName))
+                {
+                    <span class="badge bg-secondary">@Model.DepartmentName</span>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-info-circle"></i> Personal Details</h5>
+            </div>
+            <div class="card-body">
+                <!-- Name Field -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-user text-primary"></i> Name:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="editable-field" data-field="Name" data-value="@Model.Name">@Model.Name</span>
+                        <input type="text" class="form-control edit-input d-none" data-field="Name" value="@Model.Name">
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-envelope text-primary"></i> Email:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        @Model.Email <span class="text-muted">(Cannot be changed)</span>
+                    </div>
+                </div>
+                
+                <!-- Phone Field -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-phone text-success"></i> Phone:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="editable-field" data-field="Phone" data-value="@Model.Phone">@(Model.Phone ?? "Not provided")</span>
+                        <input type="text" class="form-control edit-input d-none" data-field="Phone" value="@Model.Phone">
+                    </div>
+                </div>
+                
+                <!-- Age Field -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-birthday-cake text-warning"></i> Age:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="editable-field" data-field="Age" data-value="@Model.Age">@Model.Age years old</span>
+                        <input type="number" class="form-control edit-input d-none" data-field="Age" value="@Model.Age" min="1" max="120">
+                    </div>
+                </div>
+                
+                <!-- Gender Field -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-venus-mars text-info"></i> Gender:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="editable-field" data-field="Gender" data-value="@Model.Gender">@(Model.Gender ?? "Not specified")</span>
+                        <select class="form-select edit-input d-none" data-field="Gender">
+                            <option value="">Not specified</option>
+                            @if(Model.Gender == "Male")
+                            {
+                                <option value="Male" selected>Male</option>
+                            }
+                            else
+                            {
+                                <option value="Male">Male</option>
+                            }
+                            @if(Model.Gender == "Female")
+                            {
+                                <option value="Female" selected>Female</option>
+                            }
+                            else
+                            {
+                                <option value="Female">Female</option>
+                            }
+                            @if(Model.Gender == "Other")
+                            {
+                                <option value="Other" selected>Other</option>
+                            }
+                            else
+                            {
+                                <option value="Other">Other</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Address Field -->
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-map-marker-alt text-danger"></i> Address:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="editable-field" data-field="Address" data-value="@Model.Address">@(Model.Address ?? "Not provided")</span>
+                        <textarea class="form-control edit-input d-none" data-field="Address" rows="2">@Model.Address</textarea>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <strong><i class="fas fa-user-tag text-secondary"></i> Role:</strong>
+                    </div>
+                    <div class="col-md-9">
+                        <span class="badge bg-primary text-capitalize">@Model.Role</span>
+                    </div>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.MajorName))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-graduation-cap text-primary"></i> Major:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.MajorName
+                        </div>
+                    </div>
+                }
+                
+                @if (!string.IsNullOrEmpty(Model.DepartmentName))
+                {
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong><i class="fas fa-building text-secondary"></i> Department:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.DepartmentName
+                        </div>
+                    </div>
+                }
+                
+                <hr>
+                <div class="text-center">
+                    <button id="editProfileBtn" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Edit Profile
+                    </button>
+                    <button id="saveProfileBtn" class="btn btn-success d-none">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                    <button id="cancelEditBtn" class="btn btn-secondary d-none">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button class="btn btn-outline-primary">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                </div>
+                
+                <!-- Loading indicator -->
+                <div id="loadingIndicator" class="text-center mt-3 d-none">
+                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <span class="ms-2">Updating profile...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+$(document).ready(function() {
+    let originalValues = {};
+    let isEditing = false;
+    
+    // Edit Profile Button
+    $('#editProfileBtn').click(function() {
+        enterEditMode();
+    });
+    
+    // Save Profile Button
+    $('#saveProfileBtn').click(function() {
+        saveProfile();
+    });
+    
+    // Cancel Edit Button
+    $('#cancelEditBtn').click(function() {
+        cancelEdit();
+    });
+    
+    // Enter edit mode
+    function enterEditMode() {
+        isEditing = true;
+        
+        // Store original values
+        $('.editable-field').each(function() {
+            let field = $(this).data('field');
+            originalValues[field] = $(this).data('value');
+        });
+        
+        // Hide display elements, show edit inputs
+        $('.editable-field').addClass('d-none');
+        $('.edit-input').removeClass('d-none');
+        
+        // Update buttons
+        $('#editProfileBtn').addClass('d-none');
+        $('#saveProfileBtn').removeClass('d-none');
+        $('#cancelEditBtn').removeClass('d-none');
+        
+        // Add visual feedback
+        $('.edit-input').addClass('border-primary');
+    }
+    
+    // Cancel edit mode
+    function cancelEdit() {
+        isEditing = false;
+        
+        // Reset inputs to original values
+        Object.keys(originalValues).forEach(function(field) {
+            let input = $(`[data-field="${field}"].edit-input`);
+            input.val(originalValues[field] || '');
+        });
+        
+        exitEditMode();
+    }
+    
+    // Exit edit mode
+    function exitEditMode() {
+        // Show display elements, hide edit inputs
+        $('.editable-field').removeClass('d-none');
+        $('.edit-input').addClass('d-none');
+        
+        // Update buttons
+        $('#editProfileBtn').removeClass('d-none');
+        $('#saveProfileBtn').addClass('d-none');
+        $('#cancelEditBtn').addClass('d-none');
+        
+        // Remove visual feedback
+        $('.edit-input').removeClass('border-primary border-success border-danger');
+    }
+    
+    // Save profile
+    function saveProfile() {
+        let data = {};
+        let hasChanges = false;
+        
+        // Collect data from inputs
+        $('.edit-input').each(function() {
+            let field = $(this).data('field');
+            let value = $(this).val();
+            
+            if (field === 'Age') {
+                value = parseInt(value) || 0;
+            }
+            
+            data[field] = value;
+            
+            // Check if there are changes
+            if (value !== originalValues[field]) {
+                hasChanges = true;
+            }
+        });
+        
+        if (!hasChanges) {
+            showNotification('No changes detected.', 'info');
+            exitEditMode();
+            return;
+        }
+        
+        // Validate required fields
+        if (!data.Name || data.Name.trim() === '') {
+            showNotification('Name is required.', 'error');
+            $('[data-field="Name"].edit-input').addClass('border-danger');
+            return;
+        }
+        
+        if (data.Age < 1 || data.Age > 120) {
+            showNotification('Age must be between 1 and 120.', 'error');
+            $('[data-field="Age"].edit-input').addClass('border-danger');
+            return;
+        }
+        
+        // Show loading
+        $('#loadingIndicator').removeClass('d-none');
+        $('#saveProfileBtn').prop('disabled', true);
+        
+        // Send AJAX request
+        $.ajax({
+            url: '@Url.Action("UpdateProfile", "Account")',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    updateDisplayValues(data);
+                    showNotification('Profile updated successfully!', 'success');
+                    exitEditMode();
+                } else {
+                    showNotification(response.message || 'Failed to update profile.', 'error');
+                }
+            },
+            error: function(xhr, status, error) {
+                showNotification('An error occurred while updating profile.', 'error');
+                console.error('Error:', error);
+            },
+            complete: function() {
+                $('#loadingIndicator').addClass('d-none');
+                $('#saveProfileBtn').prop('disabled', false);
+            }
+        });
+    }
+    
+    // Update display values after successful save
+    function updateDisplayValues(data) {
+        Object.keys(data).forEach(function(field) {
+            let displayElement = $(`[data-field="${field}"].editable-field`);
+            let value = data[field];
+            
+            // Format display value
+            if (field === 'Age') {
+                value = value + ' years old';
+            } else if ((field === 'Phone' || field === 'Address' || field === 'Gender') && (!value || value.trim() === '')) {
+                value = 'Not provided';
+            }
+            
+            displayElement.text(value);
+            displayElement.data('value', data[field]);
+        });
+    }
+    
+    // Show notification
+    function showNotification(message, type) {
+        let alertClass = 'alert-info';
+        if (type === 'success') alertClass = 'alert-success';
+        if (type === 'error') alertClass = 'alert-danger';
+        
+        let notification = $(`
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+        
+        // Insert notification at top of card body
+        $('.card-body').first().prepend(notification);
+        
+        // Auto dismiss after 5 seconds
+        setTimeout(function() {
+            notification.fadeOut();
+        }, 5000);
+    }
+    
+    // Real-time validation
+    $('.edit-input').on('input change', function() {
+        $(this).removeClass('border-danger border-success');
+        
+        let field = $(this).data('field');
+        let value = $(this).val();
+        
+        // Validation
+        if (field === 'Name' && (!value || value.trim() === '')) {
+            $(this).addClass('border-danger');
+        } else if (field === 'Age') {
+            let age = parseInt(value);
+            if (age < 1 || age > 120) {
+                $(this).addClass('border-danger');
+            } else {
+                $(this).addClass('border-success');
+            }
+        } else if (value && value.trim() !== '') {
+            $(this).addClass('border-success');
+        }
+    });
+});
+</script>
+}

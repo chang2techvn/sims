@@ -37,7 +37,10 @@ namespace SIMS.Models.ViewModels
         [StringLength(20)]
         public string? Phone { get; set; }
 
-        public int Age { get; set; }
+        [StringLength(10)]
+        public string? StudentCode { get; set; }
+
+        public DateTime? DateOfBirth { get; set; }
 
         [StringLength(10)]
         public string? Gender { get; set; }
@@ -58,7 +61,8 @@ namespace SIMS.Models.ViewModels
         public string Name { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string? Phone { get; set; }
-        public int Age { get; set; }
+        public string? StudentCode { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public string? Gender { get; set; }
         public string? Address { get; set; }
         public string? Avatar { get; set; }

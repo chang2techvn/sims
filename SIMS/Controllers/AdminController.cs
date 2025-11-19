@@ -134,7 +134,195 @@ namespace SIMS.Controllers
         public async Task<IActionResult> ManageUsers()
         {
             var users = await base._userManager.Users.ToListAsync();
+            
+            // Count users by role
+            var roles = await _userManager.Users
+                .Select(u => u.Role.ToLower())
+                .ToListAsync();
+            
+            ViewBag.StudentCount = roles.Count(r => r == "student");
+            ViewBag.LecturerCount = roles.Count(r => r == "lecturer");
+            ViewBag.AdminCount = roles.Count(r => r == "admin");
+            
             return View(users);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddUser(string Name, string Email, string Password, string Role, 
+            string? StudentCode, DateTime? DateOfBirth, string? Phone, string? Gender, string? Address)
+        {
+            try
+            {
+                var user = new User
+                {
+                    UserName = Email,
+                    Email = Email,
+                    Name = Name,
+                    Role = Role,
+                    StudentCode = StudentCode,
+                    DateOfBirth = DateOfBirth,
+                    Phone = Phone,
+                    Gender = Gender,
+                    Address = Address,
+                    EmailConfirmed = true
+                };
+
+                var result = await _userManager.CreateAsync(user, Password);
+                
+                if (result.Succeeded)
+                {
+                    await _userManager.AddToRoleAsync(user, Role);
+                    
+                    // Create role-specific records
+                    switch (Role.ToLower())
+                    {
+                        case "student":
+                            var student = new Student
+                            {
+                                UserId = user.Id,
+                                MajorId = 1 // Default major
+                            };
+                            _context.Students.Add(student);
+                            break;
+                        case "lecturer":
+                            var lecturer = new Lecturer
+                            {
+                                UserId = user.Id,
+                                DepartmentId = 1 // Default department
+                            };
+                            _context.Lecturers.Add(lecturer);
+                            break;
+                        case "admin":
+                            var admin = new Admin
+                            {
+                                UserId = user.Id
+                            };
+                            _context.Admins.Add(admin);
+                            break;
+                    }
+                    
+                    await _context.SaveChangesAsync();
+                    
+                    return Json(new { success = true });
+                }
+                
+                return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetUser(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return Json(new { success = false });
+
+            return Json(new
+            {
+                id = user.Id,
+                name = user.Name,
+                email = user.Email,
+                role = user.Role,
+                studentCode = user.StudentCode,
+                dateOfBirth = user.DateOfBirth,
+                phone = user.Phone,
+                gender = user.Gender,
+                address = user.Address
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateUser(string Id, string Name, string Role, 
+            string? StudentCode, DateTime? DateOfBirth, string? Phone, string? Gender, string? Address)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(Id);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                user.Name = Name;
+                user.Role = Role;
+                user.StudentCode = StudentCode;
+                user.DateOfBirth = DateOfBirth;
+                user.Phone = Phone;
+                user.Gender = Gender;
+                user.Address = Address;
+
+                var result = await _userManager.UpdateAsync(user);
+                
+                if (result.Succeeded)
+                {
+                    // Update role
+                    var currentRoles = await _userManager.GetRolesAsync(user);
+                    await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                    await _userManager.AddToRoleAsync(user, Role);
+                    
+                    return Json(new { success = true });
+                }
+                
+                return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            try
+            {
+                var user = await _userManager.FindByIdAsync(id);
+                if (user == null)
+                    return Json(new { success = false, message = "User not found" });
+
+                // Delete role-specific records first
+                switch (user.Role.ToLower())
+                {
+                    case "student":
+                        var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == id);
+                        if (student != null)
+                        {
+                            // Remove student course assignments
+                            var studentCourses = await _context.StudentCourses
+                                .Where(sc => sc.StudentId == student.StudentId)
+                                .ToListAsync();
+                            _context.StudentCourses.RemoveRange(studentCourses);
+                            
+                            _context.Students.Remove(student);
+                        }
+                        break;
+                    case "lecturer":
+                        var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == id);
+                        if (lecturer != null)
+                            _context.Lecturers.Remove(lecturer);
+                        break;
+                    case "admin":
+                        var admin = await _context.Admins.FirstOrDefaultAsync(a => a.UserId == id);
+                        if (admin != null)
+                            _context.Admins.Remove(admin);
+                        break;
+                }
+                
+                await _context.SaveChangesAsync();
+                
+                var result = await _userManager.DeleteAsync(user);
+                
+                if (result.Succeeded)
+                    return Json(new { success = true });
+                    
+                return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // Assign Students to Courses

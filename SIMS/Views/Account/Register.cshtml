@@ -93,12 +93,26 @@
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label asp-for="Age" class="form-label">
-                                <i class="fas fa-calendar"></i> Age
+                            <label asp-for="StudentCode" class="form-label">
+                                <i class="fas fa-id-card"></i> Student Code
                             </label>
-                            <input asp-for="Age" class="form-control" type="number" placeholder="Enter age" />
-                            <span asp-validation-for="Age" class="text-danger small"></span>
+                            <input asp-for="StudentCode" class="form-control" placeholder="BC00132" maxlength="10" />
+                            <span asp-validation-for="StudentCode" class="text-danger small"></span>
                         </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="DateOfBirth" class="form-label">
+                                <i class="fas fa-birthday-cake"></i> Date of Birth
+                            </label>
+                            <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
                     </div>
                 </div>
 

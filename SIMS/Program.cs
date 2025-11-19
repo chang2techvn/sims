@@ -58,8 +58,8 @@ static async Task CreateSampleUsers(UserManager<User> userManager, ApplicationDb
             Email = "admin@sims.com",
             Name = "System Administrator",
             Phone = "0123456789",
-            Age = 30,
-            Gender = "Nam",
+            DateOfBirth = new DateTime(1994, 1, 1),
+            Gender = "Male",
             Address = "123 Admin Street",
             Role = "Admin",
             EmailConfirmed = true
@@ -84,8 +84,8 @@ static async Task CreateSampleUsers(UserManager<User> userManager, ApplicationDb
             Email = "lecturer@sims.com",
             Name = "Dr. Nguyễn Văn A",
             Phone = "0987654321",
-            Age = 35,
-            Gender = "Nam",
+            DateOfBirth = new DateTime(1989, 5, 15),
+            Gender = "Male",
             Address = "456 Lecturer Avenue",
             Role = "Lecturer",
             EmailConfirmed = true
@@ -114,8 +114,9 @@ static async Task CreateSampleUsers(UserManager<User> userManager, ApplicationDb
             Email = "student@sims.com",
             Name = "Trần Thị B",
             Phone = "0369258147",
-            Age = 20,
-            Gender = "Nữ",
+            StudentCode = "BC00132",
+            DateOfBirth = new DateTime(2004, 3, 20),
+            Gender = "Female",
             Address = "789 Student Road",
             Role = "Student",
             EmailConfirmed = true

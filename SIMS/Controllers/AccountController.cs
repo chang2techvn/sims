@@ -66,7 +66,8 @@ namespace SIMS.Controllers
                     Email = model.Email,
                     Name = model.Name,
                     Phone = model.Phone,
-                    Age = model.Age,
+                    StudentCode = model.StudentCode,
+                    DateOfBirth = model.DateOfBirth,
                     Gender = model.Gender,
                     Address = model.Address,
                     Role = model.Role
@@ -147,7 +148,8 @@ namespace SIMS.Controllers
                 Name = user.Name,
                 Email = user.Email!,
                 Phone = user.Phone,
-                Age = user.Age,
+                StudentCode = user.StudentCode,
+                DateOfBirth = user.DateOfBirth,
                 Gender = user.Gender,
                 Address = user.Address,
                 Avatar = user.Avatar,
@@ -197,7 +199,8 @@ namespace SIMS.Controllers
                 // Update user properties
                 user.Name = model.Name;
                 user.Phone = model.Phone;
-                user.Age = model.Age;
+                user.StudentCode = model.StudentCode;
+                user.DateOfBirth = model.DateOfBirth;
                 user.Gender = model.Gender;
                 user.Address = model.Address;
 
@@ -220,7 +223,8 @@ namespace SIMS.Controllers
         {
             public string Name { get; set; } = "";
             public string? Phone { get; set; }
-            public int Age { get; set; }
+            public string? StudentCode { get; set; }
+            public DateTime? DateOfBirth { get; set; }
             public string? Gender { get; set; }
             public string? Address { get; set; }
         }
