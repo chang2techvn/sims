@@ -182,5 +182,47 @@ namespace SIMS.Controllers
 
             return View(profile);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateModel model)
+        {
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Update user properties
+                user.Name = model.Name;
+                user.Phone = model.Phone;
+                user.Age = model.Age;
+                user.Gender = model.Gender;
+                user.Address = model.Address;
+
+                var result = await _userManager.UpdateAsync(user);
+                
+                if (result.Succeeded)
+                {
+                    return Json(new { success = true, message = "Profile updated successfully" });
+                }
+                
+                return Json(new { success = false, message = "Failed to update profile" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        public class ProfileUpdateModel
+        {
+            public string Name { get; set; } = "";
+            public string? Phone { get; set; }
+            public int Age { get; set; }
+            public string? Gender { get; set; }
+            public string? Address { get; set; }
+        }
     }
 }

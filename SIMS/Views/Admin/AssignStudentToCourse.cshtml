@@ -78,7 +78,7 @@
                         <label class="form-label">
                             <i class="fas fa-user-graduate"></i> Select Student
                         </label>
-                        <select name="studentId" class="form-control form-select" required>
+                        <select name="studentId" class="form-select" required>
                             <option value="">Choose Student</option>
                             @foreach (var student in ViewBag.Students as List<SIMS.Models.Student>)
                             {
@@ -93,7 +93,7 @@
                         <label class="form-label">
                             <i class="fas fa-book"></i> Select Course
                         </label>
-                        <select name="courseId" class="form-control form-select" required>
+                        <select name="courseId" class="form-select" required>
                             <option value="">Choose Course</option>
                             @foreach (var course in ViewBag.Courses as List<SIMS.Models.Course>)
                             {
