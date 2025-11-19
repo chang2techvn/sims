@@ -7,41 +7,57 @@
 <div class="row mb-4">
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-user-graduate"></i>
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">Students</div>
+                    <div class="stat-value">@ViewBag.StudentCount</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-user-graduate"></i>
+                </div>
             </div>
-            <div class="stat-value">@ViewBag.StudentCount</div>
-            <div class="stat-label">Students</div>
         </div>
     </div>
     
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                <i class="fas fa-chalkboard-teacher"></i>
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">Lecturers</div>
+                    <div class="stat-value">@ViewBag.LecturerCount</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
             </div>
-            <div class="stat-value">@ViewBag.LecturerCount</div>
-            <div class="stat-label">Lecturers</div>
         </div>
     </div>
     
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                <i class="fas fa-user-shield"></i>
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">Admins</div>
+                    <div class="stat-value">@ViewBag.AdminCount</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                    <i class="fas fa-user-shield"></i>
+                </div>
             </div>
-            <div class="stat-value">@ViewBag.AdminCount</div>
-            <div class="stat-label">Admins</div>
         </div>
     </div>
     
     <div class="col-md-3">
         <div class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
-                <i class="fas fa-users"></i>
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value">@Model.Count()</div>
+                </div>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+                    <i class="fas fa-users"></i>
+                </div>
             </div>
-            <div class="stat-value">@Model.Count()</div>
-            <div class="stat-label">Total Users</div>
         </div>
     </div>
 </div>
@@ -49,10 +65,16 @@
 <!-- Users Table Card -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5><i class="fas fa-users"></i> System Users</h5>
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-            <i class="fas fa-plus"></i> Add User
-        </button>
+        <h5 class="mb-0"><i class="fas fa-users"></i> System Users</h5>
+        <div class="d-flex gap-2 align-items-center">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="userSearchInput" class="form-control search-input" placeholder="Search users...">
+            </div>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fas fa-plus"></i> Add User
+            </button>
+        </div>
     </div>
     <div class="card-body">
         @if (Model.Any())
@@ -75,7 +97,7 @@
                     <tbody>
                         @foreach (var user in Model)
                         {
-                            <tr>
+                            <tr style="cursor: pointer;" onclick="editUser('@user.Id')">
                                 <td>
                                     @if (!string.IsNullOrEmpty(user.Avatar))
                                     {
@@ -122,7 +144,7 @@
                                     }
                                 </td>
                                 <td>@(user.Gender ?? "N/A")</td>
-                                <td>
+                                <td onclick="event.stopPropagation()">
                                     <button class="btn btn-sm btn-outline-primary" onclick="editUser('@user.Id')" title="Edit User">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -427,5 +449,36 @@
             });
         }
     }
+
+    // Search Users Function
+    $('#userSearchInput').on('keyup', function() {
+        const searchValue = $(this).val().toLowerCase();
+        
+        $('table tbody tr').each(function() {
+            const row = $(this);
+            const text = row.text().toLowerCase();
+            
+            if (text.includes(searchValue)) {
+                row.show();
+            } else {
+                row.hide();
+            }
+        });
+        
+        // Show message if no results
+        const visibleRows = $('table tbody tr:visible').length;
+        if (visibleRows === 0 && searchValue !== '') {
+            if ($('#noResultsMessage').length === 0) {
+                $('table tbody').append(
+                    '<tr id="noResultsMessage"><td colspan="9" class="text-center text-muted py-4">' +
+                    '<i class="fas fa-search" style="font-size: 2rem;"></i>' +
+                    '<p class="mt-2">No users found matching your search.</p>' +
+                    '</td></tr>'
+                );
+            }
+        } else {
+            $('#noResultsMessage').remove();
+        }
+    });
 </script>
 }
