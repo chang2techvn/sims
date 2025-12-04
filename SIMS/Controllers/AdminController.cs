@@ -66,6 +66,139 @@ namespace SIMS.Controllers
             return RedirectToAction("ManageMajors");
         }
 
+        [HttpPost]
+        public async Task<IActionResult> CreateMajorAjax([FromForm] string Name, [FromForm] int DepartmentId)
+        {
+            try
+            {
+                Console.WriteLine($"CreateMajorAjax called with: Name={Name}, DepartmentId={DepartmentId}");
+
+                if (string.IsNullOrWhiteSpace(Name) || DepartmentId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid data provided." });
+                }
+
+                var department = await _context.Departments.FindAsync(DepartmentId);
+                if (department == null)
+                {
+                    return Json(new { success = false, message = "Department not found." });
+                }
+
+                var major = new Major
+                {
+                    Name = Name.Trim(),
+                    DepartmentId = DepartmentId
+                };
+
+                _context.Majors.Add(major);
+                await _context.SaveChangesAsync();
+
+                // Invalidate cache
+                await InvalidateUserStatsCache();
+
+                return Json(new { success = true, message = "Major created successfully!", majorId = major.MajorId });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating major: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while creating the major." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateMajorAjax([FromForm] int MajorId, [FromForm] string Name, [FromForm] int DepartmentId)
+        {
+            try
+            {
+                Console.WriteLine($"UpdateMajorAjax called with: MajorId={MajorId}, Name={Name}, DepartmentId={DepartmentId}");
+
+                if (MajorId <= 0 || string.IsNullOrWhiteSpace(Name) || DepartmentId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid data provided." });
+                }
+
+                var major = await _context.Majors.Include(m => m.Department).FirstOrDefaultAsync(m => m.MajorId == MajorId);
+                if (major == null)
+                {
+                    return Json(new { success = false, message = "Major not found." });
+                }
+
+                var department = await _context.Departments.FindAsync(DepartmentId);
+                if (department == null)
+                {
+                    return Json(new { success = false, message = "Department not found." });
+                }
+
+                major.Name = Name.Trim();
+                major.DepartmentId = DepartmentId;
+
+                await _context.SaveChangesAsync();
+
+                // Invalidate cache
+                await InvalidateUserStatsCache();
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Major updated successfully!",
+                    major = new
+                    {
+                        majorId = major.MajorId,
+                        name = major.Name,
+                        departmentName = major.Department.Name
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating major: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while updating the major." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteMajorAjax([FromForm] int MajorId)
+        {
+            try
+            {
+                Console.WriteLine($"DeleteMajorAjax called with: MajorId={MajorId}");
+
+                if (MajorId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid major ID." });
+                }
+
+                var major = await _context.Majors
+                    .Include(m => m.Students)
+                    .Include(m => m.Courses)
+                    .FirstOrDefaultAsync(m => m.MajorId == MajorId);
+
+                if (major == null)
+                {
+                    return Json(new { success = false, message = "Major not found." });
+                }
+
+                // Check if major has students or courses
+                if (major.Students.Any() || major.Courses.Any())
+                {
+                    return Json(new { success = false, message = "Cannot delete major that has students or courses assigned." });
+                }
+
+                _context.Majors.Remove(major);
+                await _context.SaveChangesAsync();
+
+                // Invalidate cache
+                await InvalidateUserStatsCache();
+
+                return Json(new { success = true, message = "Major deleted successfully!" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting major: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while deleting the major." });
+            }
+        }
+
         // Manage Semesters
         public async Task<IActionResult> ManageSemesters()
         {
@@ -124,15 +257,167 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCourse(Course course)
+        public async Task<IActionResult> CreateCourse([FromForm] int SubjectId, [FromForm] int SemesterId, [FromForm] int MajorId, [FromForm] int LecturerId, [FromForm] string CourseName)
         {
-            if (ModelState.IsValid)
+            try
             {
+                // Debug logging
+                Console.WriteLine($"CreateCourse called with: CourseName={CourseName}, SubjectId={SubjectId}, SemesterId={SemesterId}, MajorId={MajorId}, LecturerId={LecturerId}");
+
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(CourseName))
+                {
+                    return Json(new { success = false, message = "Course name is required" });
+                }
+
+                if (SubjectId <= 0 || SemesterId <= 0 || MajorId <= 0 || LecturerId <= 0)
+                {
+                    return Json(new { success = false, message = "All dropdown selections are required" });
+                }
+
+                // Check if entities exist
+                var subject = await _context.Subjects.FindAsync(SubjectId);
+                var semester = await _context.Semesters.FindAsync(SemesterId);
+                var major = await _context.Majors.FindAsync(MajorId);
+                var lecturer = await _context.Lecturers.FindAsync(LecturerId);
+
+                if (subject == null || semester == null || major == null || lecturer == null)
+                {
+                    return Json(new { success = false, message = "Invalid selection. Please refresh the page and try again." });
+                }
+
+                var course = new Course
+                {
+                    CourseName = CourseName.Trim(),
+                    SubjectId = SubjectId,
+                    SemesterId = SemesterId,
+                    MajorId = MajorId,
+                    LecturerId = LecturerId
+                };
+
                 _context.Courses.Add(course);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("ManageCourses");
+
+                // Reload the course with navigation properties
+                var newCourse = await _context.Courses
+                    .Include(c => c.Subject)
+                    .Include(c => c.Semester)
+                    .Include(c => c.Major)
+                    .Include(c => c.Lecturer)
+                    .ThenInclude(l => l.User)
+                    .FirstOrDefaultAsync(c => c.CourseId == course.CourseId);
+
+                return Json(new {
+                    success = true,
+                    message = "Course created successfully",
+                    course = new {
+                        courseId = newCourse?.CourseId,
+                        courseName = newCourse?.CourseName,
+                        subjectName = newCourse?.Subject?.Name,
+                        subjectCode = newCourse?.Subject?.Code,
+                        semesterName = newCourse?.Semester?.Name,
+                        semesterYear = newCourse?.Semester?.Year,
+                        majorName = newCourse?.Major?.Name,
+                        lecturerName = newCourse?.Lecturer?.User?.Name
+                    }
+                });
             }
-            return RedirectToAction("ManageCourses");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in CreateCourse: {ex.Message}");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }        [HttpPost]
+        public async Task<IActionResult> UpdateCourse([FromForm] int CourseId, [FromForm] string CourseName, [FromForm] int SubjectId, [FromForm] int SemesterId, [FromForm] int MajorId, [FromForm] int LecturerId)
+        {
+            try
+            {
+                var course = await _context.Courses.FindAsync(CourseId);
+                if (course == null)
+                {
+                    return Json(new { success = false, message = "Course not found" });
+                }
+
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(CourseName))
+                {
+                    return Json(new { success = false, message = "Course name is required" });
+                }
+
+                if (SubjectId <= 0 || SemesterId <= 0 || MajorId <= 0 || LecturerId <= 0)
+                {
+                    return Json(new { success = false, message = "All dropdown selections are required" });
+                }
+
+                // Check if entities exist
+                var subject = await _context.Subjects.FindAsync(SubjectId);
+                var semester = await _context.Semesters.FindAsync(SemesterId);
+                var major = await _context.Majors.FindAsync(MajorId);
+                var lecturer = await _context.Lecturers.FindAsync(LecturerId);
+
+                if (subject == null || semester == null || major == null || lecturer == null)
+                {
+                    return Json(new { success = false, message = "Invalid selection. Please refresh the page and try again." });
+                }
+
+                course.CourseName = CourseName.Trim();
+                course.SubjectId = SubjectId;
+                course.SemesterId = SemesterId;
+                course.MajorId = MajorId;
+                course.LecturerId = LecturerId;
+
+                await _context.SaveChangesAsync();
+
+                // Reload with navigation properties
+                var updatedCourse = await _context.Courses
+                    .Include(c => c.Subject)
+                    .Include(c => c.Semester)
+                    .Include(c => c.Major)
+                    .Include(c => c.Lecturer)
+                    .ThenInclude(l => l.User)
+                    .FirstOrDefaultAsync(c => c.CourseId == CourseId);
+
+                return Json(new {
+                    success = true,
+                    message = "Course updated successfully",
+                    course = new {
+                        courseId = updatedCourse?.CourseId,
+                        courseName = updatedCourse?.CourseName,
+                        subjectName = updatedCourse?.Subject?.Name,
+                        subjectCode = updatedCourse?.Subject?.Code,
+                        semesterName = updatedCourse?.Semester?.Name,
+                        semesterYear = updatedCourse?.Semester?.Year,
+                        majorName = updatedCourse?.Major?.Name,
+                        lecturerName = updatedCourse?.Lecturer?.User?.Name
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteCourse(int id)
+        {
+            try
+            {
+                var course = await _context.Courses.FindAsync(id);
+                if (course == null)
+                {
+                    return Json(new { success = false, message = "Course not found" });
+                }
+
+                _context.Courses.Remove(course);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Course deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // Manage Users
@@ -164,9 +449,10 @@ namespace SIMS.Controllers
             return View(users);
         }
         
-        private void InvalidateUserStatsCache()
+        private async Task InvalidateUserStatsCache()
         {
             _cache.Remove(USER_STATS_CACHE_KEY);
+            await Task.CompletedTask;
         }
 
         [HttpPost]
@@ -226,7 +512,7 @@ namespace SIMS.Controllers
                     await _context.SaveChangesAsync();
                     
                     // Invalidate cache after adding user
-                    InvalidateUserStatsCache();
+                    await InvalidateUserStatsCache();
                     
                     return Json(new { success = true });
                 }
@@ -288,7 +574,7 @@ namespace SIMS.Controllers
                     await _userManager.AddToRoleAsync(user, Role);
                     
                     // Invalidate cache after updating user
-                    InvalidateUserStatsCache();
+                    await InvalidateUserStatsCache();
                     
                     return Json(new { success = true });
                 }
@@ -345,7 +631,7 @@ namespace SIMS.Controllers
                 if (result.Succeeded)
                 {
                     // Invalidate cache after deleting user
-                    InvalidateUserStatsCache();
+                    await InvalidateUserStatsCache();
                     return Json(new { success = true });
                 }
                     

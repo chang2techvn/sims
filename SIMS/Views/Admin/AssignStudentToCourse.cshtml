@@ -43,10 +43,10 @@
                                             <form asp-action="RemoveStudentFromCourse" method="post" class="d-inline">
                                                 <input type="hidden" name="studentId" value="@assignment.StudentId" />
                                                 <input type="hidden" name="courseId" value="@assignment.CourseId" />
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                <button type="submit" class="btn btn-link text-danger p-0" 
                                                         onclick="return confirm('Remove this student from the course?')" 
                                                         title="Remove Assignment">
-                                                    <i class="fas fa-times"></i>
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
                                         </td>

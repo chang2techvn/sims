@@ -207,7 +207,7 @@ function enrollInCourse(courseId) {
     
     // Simulate API call (replace with actual AJAX call)
     setTimeout(function() {
-        btn.removeClass('btn-success').addClass('btn-outline-success');
+        btn.removeClass('btn-success').addClass('btn-link');
         btn.html('<i class="fas fa-check"></i> Enrolled');
         showToast('Successfully enrolled in course!', 'success');
     }, 1500);
