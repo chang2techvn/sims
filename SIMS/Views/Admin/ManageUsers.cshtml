@@ -12,8 +12,8 @@
                     <div class="stat-label">Students</div>
                     <div class="stat-value">@ViewBag.StudentCount</div>
                 </div>
-                <div class="stat-icon">
-                    <i class="fas fa-user-graduate"></i>
+                <div class="stat-icon-clean">
+                    <i class="fas fa-user-graduate" style="color: #ff6b35;"></i>
                 </div>
             </div>
         </div>
@@ -26,8 +26,8 @@
                     <div class="stat-label">Lecturers</div>
                     <div class="stat-value">@ViewBag.LecturerCount</div>
                 </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-                    <i class="fas fa-chalkboard-teacher"></i>
+                <div class="stat-icon-clean">
+                    <i class="fas fa-chalkboard-teacher" style="color: #10b981;"></i>
                 </div>
             </div>
         </div>
@@ -40,8 +40,8 @@
                     <div class="stat-label">Admins</div>
                     <div class="stat-value">@ViewBag.AdminCount</div>
                 </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                    <i class="fas fa-user-shield"></i>
+                <div class="stat-icon-clean">
+                    <i class="fas fa-user-shield" style="color: #f59e0b;"></i>
                 </div>
             </div>
         </div>
@@ -54,8 +54,8 @@
                     <div class="stat-label">Total Users</div>
                     <div class="stat-value">@Model.Count()</div>
                 </div>
-                <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
-                    <i class="fas fa-users"></i>
+                <div class="stat-icon-clean">
+                    <i class="fas fa-users" style="color: #3b82f6;"></i>
                 </div>
             </div>
         </div>
@@ -364,13 +364,14 @@
             success: function(response) {
                 if (response.success) {
                     $('#addUserModal').modal('hide');
+                    showToast('User added successfully!', 'success');
                     location.reload();
                 } else {
-                    alert('Error: ' + response.message);
+                    showToast('Error: ' + response.message, 'danger');
                 }
             },
             error: function() {
-                alert('Error adding user. Please try again.');
+                showToast('Error adding user. Please try again.', 'danger');
             }
         });
     });
@@ -399,7 +400,7 @@
                 $('#editUserModal').modal('show');
             },
             error: function() {
-                alert('Error loading user data.');
+                showToast('Error loading user data.', 'danger');
             }
         });
     }
@@ -418,13 +419,14 @@
             success: function(response) {
                 if (response.success) {
                     $('#editUserModal').modal('hide');
+                    showToast('User updated successfully!', 'success');
                     location.reload();
                 } else {
-                    alert('Error: ' + response.message);
+                    showToast('Error: ' + response.message, 'danger');
                 }
             },
             error: function() {
-                alert('Error updating user. Please try again.');
+                showToast('Error updating user. Please try again.', 'danger');
             }
         });
     });
@@ -438,13 +440,14 @@
                 data: { id: userId },
                 success: function(response) {
                     if (response.success) {
+                        showToast('User deleted successfully!', 'success');
                         location.reload();
                     } else {
-                        alert('Error: ' + response.message);
+                        showToast('Error: ' + response.message, 'danger');
                     }
                 },
                 error: function() {
-                    alert('Error deleting user. Please try again.');
+                    showToast('Error deleting user. Please try again.', 'danger');
                 }
             });
         }

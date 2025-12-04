@@ -154,12 +154,11 @@ body {
     padding: 0.875rem 1.5rem;
     color: var(--white);
     text-decoration: none;
-    transition: all 0.3s ease;
     font-weight: 500;
 }
 
 .nav-link:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
     color: var(--white);
 }
 
@@ -190,12 +189,11 @@ body {
     padding: 0.75rem 1.5rem 0.75rem 3.5rem;
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
-    transition: all 0.3s ease;
     font-size: 0.9rem;
 }
 
 .nav-submenu a:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     color: var(--white);
 }
 
@@ -218,13 +216,12 @@ body {
     align-items: center;
     gap: 0.5rem;
     justify-content: center;
-    transition: all 0.3s ease;
     font-weight: 500;
 }
 
 .btn-logout:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
     color: var(--white);
 }
 
@@ -270,7 +267,6 @@ body {
     cursor: pointer;
     padding: 0.75rem;
     border-radius: 8px;
-    transition: all 0.3s ease;
     background: var(--gray-100);
     width: 44px;
     height: 44px;
@@ -281,7 +277,6 @@ body {
 
 .notifications:hover {
     background: var(--gray-200);
-    transform: none;
 }
 
 .notifications i {
@@ -344,16 +339,24 @@ body {
 }
 
 .card-header {
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
     border-bottom: 1px solid var(--gray-200);
-    background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
-    color: var(--white);
+    background: var(--white);
+    color: var(--text-dark);
     border-radius: 12px 12px 0 0;
+    font-weight: 600;
 }
 
 .card-header h5 {
     margin: 0;
     font-weight: 600;
+    font-size: 1.125rem;
+    color: var(--text-dark);
+}
+
+.card-header i {
+    color: var(--primary-orange);
+    margin-right: 0.5rem;
 }
 
 .card-body {
@@ -397,8 +400,7 @@ body {
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, var(--primary-orange), var(--secondary-orange));
+    height: 0px;
 }
 
 .stat-content {
@@ -419,7 +421,6 @@ body {
     height: 50px;
     min-width: 50px;
     border-radius: 10px;
-    background: linear-gradient(135deg, var(--primary-orange), var(--secondary-orange));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -428,6 +429,19 @@ body {
 .stat-icon i {
     font-size: 1.5rem;
     color: var(--white);
+}
+
+.stat-icon-clean {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon-clean i {
+    font-size: 2rem;
 }
 
 .stat-label {
@@ -519,8 +533,7 @@ body {
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, var(--dark-orange), var(--primary-orange));
-    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+    background: var(--dark-orange);
     color: var(--white);
 }
 
@@ -551,8 +564,9 @@ body {
 }
 
 .btn-outline-primary:hover {
-    background: var(--primary-orange);
-    color: var(--white);
+    background: var(--light-orange);
+    border-color: var(--primary-orange);
+    color: var(--primary-orange);
 }
 
 /* Tables */
@@ -568,13 +582,14 @@ body {
 }
 
 .table thead th {
-    background: var(--primary-orange);
-    color: var(--white);
+    background: var(--gray-50);
+    color: var(--text-dark);
     border: none;
+    border-bottom: 2px solid var(--gray-200);
     padding: 1rem;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     letter-spacing: 0.5px;
 }
 
@@ -585,13 +600,11 @@ body {
 }
 
 .table tbody tr:hover {
-    background: var(--light-orange);
+    background: var(--gray-50);
 }
 
 .table tbody tr[style*="cursor: pointer"]:hover {
-    background: var(--light-orange);
-    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
-    transition: all 0.2s ease;
+    background: var(--gray-50);
 }
 
 /* Authentication Pages */
@@ -788,7 +801,6 @@ body {
 /* Inline Edit Profile Styles */
 .editable-field {
     cursor: pointer;
-    transition: all 0.3s ease;
     padding: 0.375rem 0.5rem;
     border-radius: 0.375rem;
     min-height: 1.5rem;
@@ -797,8 +809,8 @@ body {
 }
 
 .editable-field:hover {
-    background-color: var(--light-orange);
-    border: 1px dashed var(--primary-orange);
+    background-color: var(--gray-50);
+    border: 1px solid var(--gray-300);
 }
 
 .edit-input {
@@ -834,3 +846,230 @@ body {
     border-radius: 0.5rem;
     padding: 1rem;
 }
+
+/* Avatar Upload Styles */
+.user-avatar {
+    position: relative;
+    display: inline-block;
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.user-avatar:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.avatar-upload-btn {
+    background: var(--primary-orange);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 2px solid white;
+}
+
+.avatar-upload-btn:hover {
+    background: var(--dark-orange);
+}
+
+.avatar-image {
+    border: 4px solid var(--gray-200);
+}
+
+/* ========================================
+   BOOTSTRAP COLOR OVERRIDES
+   Override Bootstrap's default blue primary color with orange theme
+   ======================================== */
+
+/* Bootstrap Primary Color Override */
+.btn-primary {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+    color: var(--white) !important;
+}
+
+.btn-primary i,
+.btn-primary .fas,
+.btn-primary .far,
+.btn-primary .fab {
+    color: var(--white) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--dark-orange) !important;
+    border-color: var(--dark-orange) !important;
+    color: var(--white) !important;
+}
+
+/* Bootstrap Background Colors */
+.bg-primary {
+    background-color: var(--primary-orange) !important;
+}
+
+.text-primary {
+    color: var(--primary-orange) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-orange) !important;
+}
+
+/* Bootstrap Badge */
+.badge.bg-primary {
+    background-color: var(--primary-orange) !important;
+}
+
+/* Bootstrap Alert */
+.alert-primary {
+    background-color: rgba(255, 107, 53, 0.1) !important;
+    border-color: var(--primary-orange) !important;
+    color: var(--dark-orange) !important;
+}
+
+/* Bootstrap Link */
+a.text-primary:hover,
+a.text-primary:focus {
+    color: var(--dark-orange) !important;
+}
+
+/* Bootstrap Button Outline */
+.btn-outline-primary {
+    color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus,
+.btn-outline-primary:active {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+    color: var(--white) !important;
+}
+
+/* Bootstrap Form Controls */
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary-orange) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25) !important;
+}
+
+/* Bootstrap Pagination */
+.pagination .page-link {
+    color: var(--primary-orange);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+}
+
+.pagination .page-link:hover {
+    color: var(--dark-orange);
+    background-color: var(--light-orange);
+    border-color: var(--primary-orange);
+}
+
+/* Bootstrap Nav Pills/Tabs */
+.nav-pills .nav-link.active {
+    background-color: var(--primary-orange) !important;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--primary-orange) !important;
+    border-color: var(--gray-300) var(--gray-300) var(--white) !important;
+}
+
+/* Bootstrap Progress Bar */
+.progress-bar {
+    background-color: var(--primary-orange) !important;
+}
+
+/* Bootstrap Spinner */
+.spinner-border.text-primary {
+    color: var(--primary-orange) !important;
+}
+
+/* Bootstrap Dropdown */
+.dropdown-item.active,
+.dropdown-item:active {
+    background-color: var(--primary-orange) !important;
+}
+
+/* Bootstrap List Group */
+.list-group-item.active {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+}
+
+/* Bootstrap Accordion */
+.accordion-button:not(.collapsed) {
+    background-color: var(--light-orange) !important;
+    color: var(--primary-orange) !important;
+}
+
+/* Bootstrap Modal */
+.modal-header {
+    border-bottom-color: var(--gray-200);
+}
+
+/* Bootstrap Tooltip & Popover - if using */
+.tooltip-inner {
+    background-color: var(--text-dark);
+}
+
+/* Bootstrap Custom Checkbox/Radio - if using */
+.form-check-input:checked {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+}
+
+.form-check-input:focus {
+    border-color: var(--primary-orange) !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25) !important;
+}
+
+/* Bootstrap Input Group */
+.input-group-text {
+    border-color: var(--gray-300);
+}
+
+.input-group .form-control:focus,
+.input-group .form-select:focus {
+    border-color: var(--primary-orange) !important;
+}
+
+/* Ensure all primary buttons use orange */
+button[class*="btn-primary"],
+a[class*="btn-primary"],
+input[type="submit"].btn-primary {
+    background-color: var(--primary-orange) !important;
+    border-color: var(--primary-orange) !important;
+}
+
+button[class*="btn-primary"]:hover,
+a[class*="btn-primary"]:hover,
+input[type="submit"].btn-primary:hover {
+    background-color: var(--dark-orange) !important;
+    border-color: var(--dark-orange) !important;
+}
+
+

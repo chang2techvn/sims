@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SIMS.Data;
 using SIMS.Models;
 
@@ -11,10 +12,14 @@ namespace SIMS.Controllers
     public class AdminController : BaseController
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMemoryCache _cache;
+        private const string USER_STATS_CACHE_KEY = "UserStatistics";
+        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(10);
 
-        public AdminController(ApplicationDbContext context, UserManager<User> userManager) : base(userManager)
+        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache) : base(userManager)
         {
             _context = context;
+            _cache = cache;
         }
 
         public IActionResult Index()
@@ -135,16 +140,33 @@ namespace SIMS.Controllers
         {
             var users = await base._userManager.Users.ToListAsync();
             
-            // Count users by role
-            var roles = await _userManager.Users
-                .Select(u => u.Role.ToLower())
-                .ToListAsync();
+            // Get statistics from cache or calculate
+            var stats = await _cache.GetOrCreateAsync(USER_STATS_CACHE_KEY, async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = CACHE_DURATION;
+                
+                var roles = await _userManager.Users
+                    .Select(u => u.Role.ToLower())
+                    .ToListAsync();
+                
+                return new
+                {
+                    StudentCount = roles.Count(r => r == "student"),
+                    LecturerCount = roles.Count(r => r == "lecturer"),
+                    AdminCount = roles.Count(r => r == "admin")
+                };
+            });
             
-            ViewBag.StudentCount = roles.Count(r => r == "student");
-            ViewBag.LecturerCount = roles.Count(r => r == "lecturer");
-            ViewBag.AdminCount = roles.Count(r => r == "admin");
+            ViewBag.StudentCount = stats!.StudentCount;
+            ViewBag.LecturerCount = stats.LecturerCount;
+            ViewBag.AdminCount = stats.AdminCount;
             
             return View(users);
+        }
+        
+        private void InvalidateUserStatsCache()
+        {
+            _cache.Remove(USER_STATS_CACHE_KEY);
         }
 
         [HttpPost]
@@ -202,6 +224,9 @@ namespace SIMS.Controllers
                     }
                     
                     await _context.SaveChangesAsync();
+                    
+                    // Invalidate cache after adding user
+                    InvalidateUserStatsCache();
                     
                     return Json(new { success = true });
                 }
@@ -262,6 +287,9 @@ namespace SIMS.Controllers
                     await _userManager.RemoveFromRolesAsync(user, currentRoles);
                     await _userManager.AddToRoleAsync(user, Role);
                     
+                    // Invalidate cache after updating user
+                    InvalidateUserStatsCache();
+                    
                     return Json(new { success = true });
                 }
                 
@@ -315,7 +343,11 @@ namespace SIMS.Controllers
                 var result = await _userManager.DeleteAsync(user);
                 
                 if (result.Succeeded)
+                {
+                    // Invalidate cache after deleting user
+                    InvalidateUserStatsCache();
                     return Json(new { success = true });
+                }
                     
                 return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
             }

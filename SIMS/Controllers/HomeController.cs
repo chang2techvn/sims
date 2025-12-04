@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using SIMS.Data;
 using SIMS.Models;
 
@@ -12,11 +13,15 @@ namespace SIMS.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
+        private readonly IMemoryCache _cache;
+        private const string DASHBOARD_STATS_CACHE_KEY = "DashboardStatistics";
+        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(10);
 
-        public HomeController(ILogger<HomeController> logger, UserManager<User> userManager, ApplicationDbContext context) : base(userManager)
+        public HomeController(ILogger<HomeController> logger, UserManager<User> userManager, ApplicationDbContext context, IMemoryCache cache) : base(userManager)
         {
             _logger = logger;
             _context = context;
+            _cache = cache;
         }
 
         public IActionResult Index()
@@ -44,10 +49,21 @@ namespace SIMS.Controllers
             switch (user.Role.ToLower())
             {
                 case "admin":
-                    ViewBag.TotalStudents = await _context.Students.CountAsync();
-                    ViewBag.TotalLecturers = await _context.Lecturers.CountAsync();
-                    ViewBag.TotalCourses = await _context.Courses.CountAsync();
-                    ViewBag.TotalDepartments = await _context.Departments.CountAsync();
+                    var adminStats = await _cache.GetOrCreateAsync($"{DASHBOARD_STATS_CACHE_KEY}_Admin", async entry =>
+                    {
+                        entry.AbsoluteExpirationRelativeToNow = CACHE_DURATION;
+                        return new
+                        {
+                            TotalStudents = await _context.Students.CountAsync(),
+                            TotalLecturers = await _context.Lecturers.CountAsync(),
+                            TotalAdmins = await _context.Admins.CountAsync(),
+                            TotalUsers = await _context.Users.CountAsync()
+                        };
+                    });
+                    ViewBag.TotalStudents = adminStats!.TotalStudents;
+                    ViewBag.TotalLecturers = adminStats.TotalLecturers;
+                    ViewBag.TotalAdmins = adminStats.TotalAdmins;
+                    ViewBag.TotalUsers = adminStats.TotalUsers;
                     break;
                 case "lecturer":
                     var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);

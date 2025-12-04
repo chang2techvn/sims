@@ -60,8 +60,18 @@ function enhanceFormValidation() {
         }, 5000);
     });
     
-    // Real-time validation feedback
+    // Real-time validation feedback (skip for forms with no-auto-validate class)
     $('.form-control').on('blur', function() {
+        // Skip validation for forms marked as no-auto-validate
+        if ($(this).closest('form').hasClass('no-auto-validate')) {
+            return;
+        }
+        
+        // Skip validation for readonly fields
+        if ($(this).prop('readonly') || $(this).prop('disabled')) {
+            return;
+        }
+        
         var input = $(this);
         var isValid = this.checkValidity();
         

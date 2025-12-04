@@ -19,6 +19,32 @@ builder.Services.AddDefaultIdentity<User>(options =>
 .AddRoles<IdentityRole>()
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// Configure application cookie
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "SIMS.Auth";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.ExpireTimeSpan = TimeSpan.FromDays(30); // Cookie expires after 30 days
+    options.SlidingExpiration = true; // Reset expiration on each request
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+});
+
+// Add session support
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromDays(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.Name = "SIMS.Session";
+});
+
+// Add memory cache
+builder.Services.AddMemoryCache();
+
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -150,6 +176,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+app.UseSession(); // Enable session before authentication
 
 app.UseAuthentication();
 app.UseAuthorization();

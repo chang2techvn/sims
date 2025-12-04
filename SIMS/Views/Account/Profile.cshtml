@@ -10,15 +10,21 @@
                 <h5><i class="fas fa-user"></i> Profile Information</h5>
             </div>
             <div class="card-body text-center">
-                <div class="user-avatar mb-4">
+                <div class="user-avatar mb-4 position-relative">
                     @if (!string.IsNullOrEmpty(Model.Avatar))
                     {
-                        <img src="@Model.Avatar" alt="Avatar" class="rounded-circle" width="150" height="150">
+                        <img src="@Model.Avatar" alt="Avatar" class="rounded-circle avatar-image" width="150" height="150" id="avatarPreview">
                     }
                     else
                     {
-                        <i class="fas fa-user-circle" style="font-size: 150px; color: var(--primary-orange);"></i>
+                        <i class="fas fa-user-circle avatar-placeholder" style="font-size: 150px; color: var(--primary-orange);" id="avatarPlaceholder"></i>
                     }
+                    <div class="avatar-overlay">
+                        <label for="avatarUpload" class="avatar-upload-btn">
+                            <i class="fas fa-camera"></i>
+                        </label>
+                        <input type="file" id="avatarUpload" name="avatar" accept="image/*" class="d-none">
+                    </div>
                 </div>
                 <h4 class="card-title">@Model.Name</h4>
                 <p class="text-muted text-capitalize">@Model.Role</p>
@@ -47,7 +53,7 @@
                 </button>
             </div>
             <div class="card-body">
-                <form id="profileForm">
+                <form id="profileForm" class="no-auto-validate">
                     <div class="row mb-3">
                         <label class="col-md-3 col-form-label"><strong><i class="fas fa-user text-primary"></i> Name:</strong></label>
                         <div class="col-md-9">
@@ -58,10 +64,8 @@
                     <div class="row mb-3">
                         <label class="col-md-3 col-form-label"><strong><i class="fas fa-envelope text-primary"></i> Email:</strong></label>
                         <div class="col-md-9">
-                            <input type="email" class="form-control" value="@Model.Email" readonly>
-                            <small class="text-muted">Cannot be changed</small>
+                            <input type="email" class="form-control profile-field" id="Email" name="Email" value="@Model.Email" readonly>                        </div>
                         </div>
-                    </div>
                     
                     @if (Model.Role.ToLower() == "student")
                     {
@@ -127,6 +131,13 @@
 <script>
     let isEditing = false;
     
+    // Prevent automatic validation on profile fields
+    $('.profile-field, #profileForm .form-control').on('focus blur change input', function(e) {
+        if (!isEditing) {
+            $(this).removeClass('is-valid is-invalid');
+        }
+    });
+    
     $('#editProfileBtn').on('click', function() {
         if (!isEditing) {
             // Enable editing
@@ -145,11 +156,91 @@
         location.reload();
     });
     
+    // Avatar Upload Preview
+    $('#avatarUpload').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                showToast('Please select a valid image file.', 'danger');
+                return;
+            }
+            
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Image size must be less than 5MB.', 'danger');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+                
+                // Hide placeholder and show image
+                $('#avatarPlaceholder').hide();
+                $('#avatarPreview').attr('src', imageUrl).show();
+                
+                // Upload image immediately
+                uploadAvatar(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    function uploadAvatar(file) {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        // Show loading indicator
+        $('.avatar-overlay').html('<i class="fas fa-spinner fa-spin text-white"></i>');
+        
+        $.ajax({
+            url: '@Url.Action("UploadAvatar", "Account")',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    // Update avatar URL in preview
+                    $('#avatarPreview').attr('src', response.avatarUrl);
+                    
+                    // Update avatar in header/sidebar if exists
+                    $('.user-avatar img, .sidebar .user-avatar img').attr('src', response.avatarUrl);
+                    
+                    // Reset file input to allow selecting the same file again
+                    $('#avatarUpload').val('');
+                    
+                    // Show success indicator
+                    $('.avatar-overlay').html('<i class="fas fa-check text-success"></i>');
+                    setTimeout(() => {
+                        $('.avatar-overlay').html('<label for="avatarUpload" class="avatar-upload-btn"><i class="fas fa-camera"></i></label>');
+                    }, 2000);
+                    
+                    // Show success toast
+                    showToast('Avatar updated successfully!', 'success');
+                } else {
+                    showToast('Error: ' + response.message, 'danger');
+                    // Reset file input to allow selecting the same file again
+                    $('#avatarUpload').val('');
+                    $('.avatar-overlay').html('<label for="avatarUpload" class="avatar-upload-btn"><i class="fas fa-camera"></i></label>');
+                }
+            },
+            error: function() {
+                showToast('Error uploading avatar. Please try again.', 'danger');
+                // Reset file input to allow selecting the same file again
+                $('#avatarUpload').val('');
+                $('.avatar-overlay').html('<label for="avatarUpload" class="avatar-upload-btn"><i class="fas fa-camera"></i></label>');
+            }
+        });
+    }
+    
     $('#profileForm').on('submit', function(e) {
         e.preventDefault();
         
         const data = {
             Name: $('#Name').val(),
+            Email: $('#Email').val(),
             Phone: $('#Phone').val() || null,
             StudentCode: $('#StudentCode').val() || null,
             DateOfBirth: $('#DateOfBirth').val() ? new Date($('#DateOfBirth').val()).toISOString() : null,
@@ -167,15 +258,15 @@
             data: JSON.stringify(data),
             success: function(response) {
                 if (response.success) {
-                    alert('Profile updated successfully!');
+                    showToast('Profile updated successfully!', 'success');
                     location.reload();
                 } else {
-                    alert('Error: ' + response.message);
+                    showToast('Error: ' + response.message, 'danger');
                     $('#saveBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Save Changes');
                 }
             },
             error: function() {
-                alert('Error updating profile. Please try again.');
+                showToast('Error updating profile. Please try again.', 'danger');
                 $('#saveBtn').prop('disabled', false).html('<i class="fas fa-save"></i> Save Changes');
             }
         });
