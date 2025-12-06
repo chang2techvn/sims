@@ -14,6 +14,9 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" id="userSearchInput" class="form-control search-input" placeholder="Search users...">
             </div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#importUserModal">
+                <i class="fas fa-upload text-white"></i> Import Users
+            </button>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
                 <i class="fas fa-plus"></i> Add User
             </button>
@@ -317,6 +320,58 @@
     </div>
 </div>
 
+<!-- Import Users Modal -->
+<div class="modal fade" id="importUserModal" tabindex="-1" aria-labelledby="importUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importUserModalLabel"><i class="fas fa-upload"></i> Import Users</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="importUserForm" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Import Instructions:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Upload a CSV or Excel file (.csv, .xlsx, .xls)</li>
+                            <li>Required columns: Name, Email, Password, Role</li>
+                            <li>Optional columns: StudentCode, DateOfBirth, Phone, Gender, Address</li>
+                            <li>DateOfBirth format: YYYY-MM-DD</li>
+                            <li>Role values: Admin, Lecturer, Student</li>
+                        </ul>
+                    </div>
+                    <div class="mb-3">
+                        <label for="importFile" class="form-label">Select File *</label>
+                        <input type="file" class="form-control" id="importFile" name="file" accept=".csv,.xlsx,.xls" required />
+                        <div class="form-text">Supported formats: CSV, Excel (.xlsx, .xls)</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="skipDuplicates" name="skipDuplicates" checked>
+                            <label class="form-check-label" for="skipDuplicates">
+                                Skip duplicate emails (recommended)
+                            </label>
+                        </div>
+                    </div>
+                    <div id="importPreview" class="mt-3" style="display: none;">
+                        <h6>Preview (First 5 rows):</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered" id="previewTable"></table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="importBtn">
+                        <i class="fas fa-upload"></i> Import Users
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
     // Add User Form Submit
@@ -343,6 +398,72 @@
                 showToast('Error adding user. Please try again.', 'danger');
             }
         });
+    });
+
+    // Import Users Form Submit
+    $('#importUserForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const file = formData.get('file');
+        
+        if (!file || file.size === 0) {
+            showToast('Please select a file to import.', 'warning');
+            return;
+        }
+        
+        // Show loading state
+        $('#importBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Importing...');
+        
+        $.ajax({
+            url: '@Url.Action("ImportUsers", "Admin")',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                if (response.success) {
+                    $('#importUserModal').modal('hide');
+                    showToast(`Successfully imported ${response.importedCount} users!`, 'success');
+                    if (response.errors && response.errors.length > 0) {
+                        showToast(`Warning: ${response.errors.length} rows had errors.`, 'warning');
+                    }
+                    location.reload();
+                } else {
+                    showToast('Error: ' + response.message, 'danger');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Error importing users. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                showToast(errorMessage, 'danger');
+            },
+            complete: function() {
+                $('#importBtn').prop('disabled', false).html('<i class="fas fa-upload"></i> Import Users');
+            }
+        });
+    });
+
+    // File preview functionality
+    $('#importFile').on('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const fileName = file.name.toLowerCase();
+            if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx') && !fileName.endsWith('.xls')) {
+                showToast('Please select a valid CSV or Excel file.', 'warning');
+                this.value = '';
+                return;
+            }
+            
+            // Basic file size check (10MB limit)
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File size must be less than 10MB.', 'warning');
+                this.value = '';
+                return;
+            }
+        }
     });
 
     // Edit User Function

@@ -95,15 +95,6 @@ function enhanceDataTables() {
             var tableId = 'table_' + Math.random().toString(36).substr(2, 9);
             $(this).attr('id', tableId);
             
-            // Add search input
-            var searchHtml = '<div class="table-search mb-3">' +
-                '<div class="input-group">' +
-                '<span class="input-group-text"><i class="fas fa-search"></i></span>' +
-                '<input type="text" class="form-control" placeholder="Search table..." ' +
-                'onkeyup="filterTable(\'' + tableId + '\', this.value)">' +
-                '</div></div>';
-            
-            $(this).closest('.table-responsive').before(searchHtml);
         }
     });
 }
