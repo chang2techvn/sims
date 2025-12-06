@@ -157,6 +157,28 @@
     </div>
 </div>
 
+<!-- Delete Major Modal -->
+<div class="modal fade" id="deleteMajorModal" tabindex="-1" aria-labelledby="deleteMajorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteMajorModalLabel"><i class="fas fa-trash"></i> Delete Major</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the major "<strong id="deleteMajorName"></strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteMajor()">
+                    <i class="fas fa-trash"></i> Delete Major
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 // Create Major with AJAX
@@ -230,13 +252,21 @@ function updateMajor() {
 }
 
 // Delete Major with AJAX
+let deleteMajorId = null;
+let deleteMajorName = null;
+
 function deleteMajor(majorId, majorName) {
-    if (!confirm(`Are you sure you want to delete "${majorName}"? This action cannot be undone.`)) {
-        return;
-    }
-    
+    deleteMajorId = majorId;
+    deleteMajorName = majorName;
+    document.getElementById('deleteMajorName').textContent = majorName;
+    $('#deleteMajorModal').modal('show');
+}
+
+function confirmDeleteMajor() {
+    if (!deleteMajorId) return;
+
     const formData = new FormData();
-    formData.append('MajorId', majorId);
+    formData.append('MajorId', deleteMajorId);
     
     fetch('/Admin/DeleteMajorAjax', {
         method: 'POST',
@@ -245,10 +275,11 @@ function deleteMajor(majorId, majorName) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            $('#deleteMajorModal').modal('hide');
             showToast(data.message, 'success');
             
             // Remove the table row
-            const row = document.querySelector(`tr[data-major-id="${majorId}"]`);
+            const row = document.querySelector(`tr[data-major-id="${deleteMajorId}"]`);
             if (row) {
                 row.remove();
                 

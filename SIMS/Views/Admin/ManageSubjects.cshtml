@@ -24,7 +24,7 @@
                             <tbody>
                                 @foreach (var subject in Model)
                                 {
-                                    <tr>
+                                    <tr data-subject-id="@subject.SubjectId">
                                         <td>
                                             <span class="badge bg-primary">@subject.Code</span>
                                         </td>
@@ -32,10 +32,10 @@
                                             <strong>@subject.Name</strong>
                                         </td>
                                         <td>
-                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit">
+                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit" onclick="editSubject(@subject.SubjectId, '@subject.Code', '@subject.Name')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-link text-danger p-0" title="Delete">
+                                            <button class="btn btn-link text-danger p-0" title="Delete" onclick="deleteSubject(@subject.SubjectId, '@subject.Name')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -95,3 +95,115 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Subject Modal -->
+<div class="modal fade" id="editSubjectModal" tabindex="-1" aria-labelledby="editSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSubjectModalLabel"><i class="fas fa-edit"></i> Edit Subject</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editSubjectForm" method="post" asp-action="EditSubject">
+                <div class="modal-body">
+                    <input type="hidden" id="editSubjectId" name="id" />
+                    <div class="form-group mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-code"></i> Subject Code
+                        </label>
+                        <input id="editSubjectCode" name="code" class="form-control" placeholder="e.g., CS101" required />
+                    </div>
+                    <div class="form-group mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-book-open"></i> Subject Name
+                        </label>
+                        <input id="editSubjectName" name="name" class="form-control" placeholder="Enter subject name" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Subject</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Subject Modal -->
+<div class="modal fade" id="deleteSubjectModal" tabindex="-1" aria-labelledby="deleteSubjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteSubjectModalLabel"><i class="fas fa-trash"></i> Delete Subject</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the subject "<strong id="deleteSubjectName"></strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteSubject()">
+                    <i class="fas fa-trash"></i> Delete Subject
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="deleteSubjectId" />
+
+@section Scripts {
+    <script>
+        function editSubject(id, code, name) {
+            document.getElementById('editSubjectId').value = id;
+            document.getElementById('editSubjectCode').value = code;
+            document.getElementById('editSubjectName').value = name;
+            new bootstrap.Modal(document.getElementById('editSubjectModal')).show();
+        }
+
+        function deleteSubject(id, name) {
+            document.getElementById('deleteSubjectId').value = id;
+            document.getElementById('deleteSubjectName').textContent = name;
+            new bootstrap.Modal(document.getElementById('deleteSubjectModal')).show();
+        }
+
+        function confirmDeleteSubject() {
+            const id = document.getElementById('deleteSubjectId').value;
+            if (!id) return;
+
+            const formData = new FormData();
+            formData.append('id', id);
+
+            fetch('@Url.Action("DeleteSubjectAjax", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#deleteSubjectModal').modal('hide');
+                    showToast(data.message, 'success');
+                    
+                    // Remove the table row
+                    const row = document.querySelector(`tr[data-subject-id="${id}"]`);
+                    if (row) {
+                        row.remove();
+                        
+                        // Check if table is empty
+                        const tbody = document.querySelector('tbody');
+                        if (tbody.children.length === 0) {
+                            location.reload(); // Reload to show empty state
+                        }
+                    }
+                } else {
+                    showToast(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while deleting the subject.', 'error');
+            });
+        }
+    </script>
+}

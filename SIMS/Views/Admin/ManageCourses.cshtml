@@ -42,9 +42,9 @@
                                             <button class="btn btn-link text-primary p-0 me-2" onclick="editCourse(@course.CourseId, '@course.CourseName', @course.SubjectId, @course.SemesterId, @course.MajorId, @course.LecturerId)" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <a asp-action="CourseStudents" asp-route-id="@course.CourseId" class="btn btn-link text-info p-0 me-2" title="View Students">
+                                            <button class="btn btn-link text-info p-0 me-2" onclick="viewCourseStudents(@course.CourseId, '@course.CourseName')" title="View Students">
                                                 <i class="fas fa-users"></i>
-                                            </a>
+                                            </button>
                                             <button class="btn btn-link text-danger p-0" onclick="deleteCourse(@course.CourseId, '@course.CourseName')" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -200,6 +200,56 @@
                 <button type="button" class="btn btn-primary" onclick="updateCourse()">
                     <i class="fas fa-save"></i> Save Changes
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Course Modal -->
+<div class="modal fade" id="deleteCourseModal" tabindex="-1" aria-labelledby="deleteCourseModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCourseModalLabel"><i class="fas fa-trash"></i> Delete Course</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the course "<strong id="deleteCourseName"></strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteCourse()">
+                    <i class="fas fa-trash"></i> Delete Course
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Course Students Modal -->
+<div class="modal fade" id="viewStudentsModal" tabindex="-1" aria-labelledby="viewStudentsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewStudentsModalLabel"><i class="fas fa-users"></i> Course Students</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="courseInfo" class="mb-3">
+                    <h6 id="courseTitle"></h6>
+                    <small class="text-muted" id="courseDetails"></small>
+                </div>
+                <div id="studentsList">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -366,21 +416,30 @@
     }
     
     // Delete Course
+    let deleteCourseId = null;
+    let deleteCourseName = null;
+
     function deleteCourse(id, name) {
-        if (!confirm(`Are you sure you want to delete "${name}"?`)) {
-            return;
-        }
-        
+        deleteCourseId = id;
+        deleteCourseName = name;
+        document.getElementById('deleteCourseName').textContent = name;
+        $('#deleteCourseModal').modal('show');
+    }
+
+    function confirmDeleteCourse() {
+        if (!deleteCourseId) return;
+
         $.ajax({
             url: '@Url.Action("DeleteCourse", "Admin")',
             type: 'POST',
-            data: { id: id },
+            data: { id: deleteCourseId },
             success: function(response) {
                 if (response.success) {
+                    $('#deleteCourseModal').modal('hide');
                     showToast(response.message, 'success');
                     
                     // Remove row from table
-                    $(`tr[data-course-id="${id}"]`).fadeOut(300, function() {
+                    $(`tr[data-course-id="${deleteCourseId}"]`).fadeOut(300, function() {
                         $(this).remove();
                         
                         // Check if table is empty
@@ -404,6 +463,95 @@
                 showToast('Failed to delete course', 'danger');
             }
         });
+    }
+
+    function viewCourseStudents(courseId, courseName) {
+        // Set modal title
+        document.getElementById('viewStudentsModalLabel').innerHTML = '<i class="fas fa-users"></i> Students in ' + courseName;
+        
+        // Show loading
+        document.getElementById('studentsList').innerHTML = `
+            <div class="text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        `;
+        
+        // Show modal
+        new bootstrap.Modal(document.getElementById('viewStudentsModal')).show();
+        
+        // Fetch students data
+        fetch('@Url.Action("GetCourseStudents", "Admin")/?courseId=' + courseId)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update course info
+                    document.getElementById('courseTitle').textContent = data.courseName;
+                    document.getElementById('courseDetails').textContent = data.subjectName + ' - ' + data.semesterName;
+                    
+                    // Update students list
+                    let studentsHtml = '';
+                    if (data.students && data.students.length > 0) {
+                        studentsHtml = `
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Avatar</th>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        
+                        data.students.forEach(student => {
+                            const avatarUrl = student.avatar ? '/uploads/avatars/' + student.avatar : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAyMEMyOCAyMi4yMzggMjYuMjM4IDI1IDI1IDI1SDE1QzEzLjc2MTQgMjUgMTIgMjIuMjM4IDEyIDIwQzEyIDE3Ljc2MTQgMTMuNzYxNCAyMCAxMy43NjE0IDIwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';
+                            studentsHtml += `
+                                <tr>
+                                    <td>
+                                        <img src="${avatarUrl}" alt="Avatar" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNFNUU3RUIiLz4KPHBhdGggZD0iTTIwIDIwQzIyLjc2MTQgMjAgMjUgMTcuNzYxNCAyNSAyMEMyOCAyMi4yMzggMjYuMjM4IDI1IDI1IDI1SDE1QzEzLjc2MTQgMjUgMTIgMjIuMjM4IDEyIDIwQzEyIDE3Ljc2MTQgMTMuNzYxNCAyMCAxMy43NjE0IDIwWiIgZmlsbD0iIzlDQTNBRiIvPgo8L3N2Zz4=';">
+                                    </td>
+                                    <td>${student.studentId}</td>
+                                    <td>${student.name}</td>
+                                    <td>${student.email}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        studentsHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    } else {
+                        studentsHtml = `
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-slash text-muted" style="font-size: 3rem;"></i>
+                                <p class="text-muted mt-3">No students enrolled in this course.</p>
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('studentsList').innerHTML = studentsHtml;
+                } else {
+                    document.getElementById('studentsList').innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> ${data.message}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('studentsList').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> Failed to load students data.
+                    </div>
+                `;
+            });
     }
 </script>
 }

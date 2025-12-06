@@ -40,15 +40,11 @@
                                             <span class="badge bg-secondary">@assignment.Student.Major.Name</span>
                                         </td>
                                         <td>
-                                            <form asp-action="RemoveStudentFromCourse" method="post" class="d-inline">
-                                                <input type="hidden" name="studentId" value="@assignment.StudentId" />
-                                                <input type="hidden" name="courseId" value="@assignment.CourseId" />
-                                                <button type="submit" class="btn btn-link text-danger p-0" 
-                                                        onclick="return confirm('Remove this student from the course?')" 
-                                                        title="Remove Assignment">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </form>
+                                            <button class="btn btn-link text-danger p-0" 
+                                                    onclick="removeStudent(@assignment.StudentId, @assignment.CourseId, '@assignment.Student.User.Name', '@assignment.Course.CourseName')" 
+                                                    title="Remove Assignment">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 }
@@ -73,7 +69,7 @@
                 <h5><i class="fas fa-plus"></i> Assign Student to Course</h5>
             </div>
             <div class="card-body">
-                <form asp-action="AssignStudentToCourse" method="post">
+                <form id="assignForm" method="post">
                     <div class="form-group">
                         <label class="form-label">
                             <i class="fas fa-user-graduate"></i> Select Student
@@ -98,13 +94,13 @@
                             @foreach (var course in ViewBag.Courses as List<SIMS.Models.Course>)
                             {
                                 <option value="@course.CourseId">
-                                    @course.Subject.Name - @course.Major.Name
+                                    @course.CourseName
                                 </option>
                             }
                         </select>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="button" class="btn btn-primary w-100" onclick="assignStudent()">
                         <i class="fas fa-user-plus"></i> Assign to Course
                     </button>
                 </form>
@@ -130,3 +126,123 @@
         </div>
     </div>
 </div>
+
+<!-- Remove Student Modal -->
+<div class="modal fade" id="removeStudentModal" tabindex="-1" aria-labelledby="removeStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="removeStudentModalLabel"><i class="fas fa-user-minus"></i> Remove Student from Course</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove <strong id="removeStudentName"></strong> from the course <strong id="removeCourseName"></strong>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmRemoveStudent()">
+                    <i class="fas fa-user-minus"></i> Remove Student
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="removeStudentId" />
+<input type="hidden" id="removeCourseId" />
+
+@section Scripts {
+    <script>
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            var toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Create toast container if it doesn't exist
+            if (!$('#toast-container').length) {
+                $('body').append('<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+            }
+            
+            var $toast = $(toastHtml);
+            $('#toast-container').append($toast);
+            
+            var toast = new bootstrap.Toast($toast[0]);
+            toast.show();
+            
+            // Remove from DOM after hide
+            $toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+
+        function removeStudent(studentId, courseId, studentName, courseName) {
+            document.getElementById('removeStudentId').value = studentId;
+            document.getElementById('removeCourseId').value = courseId;
+            document.getElementById('removeStudentName').textContent = studentName;
+            document.getElementById('removeCourseName').textContent = courseName;
+            new bootstrap.Modal(document.getElementById('removeStudentModal')).show();
+        }
+
+        function confirmRemoveStudent() {
+            const studentId = document.getElementById('removeStudentId').value;
+            const courseId = document.getElementById('removeCourseId').value;
+            if (!studentId || !courseId) return;
+
+            const formData = new FormData();
+            formData.append('studentId', studentId);
+            formData.append('courseId', courseId);
+
+            fetch('@Url.Action("RemoveStudentFromCourse", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#removeStudentModal').modal('hide');
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000); // Delay reload to show toast
+                } else {
+                    showToast(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while removing the student.', 'error');
+            });
+        }
+
+        function assignStudent() {
+            const form = document.getElementById('assignForm');
+            const formData = new FormData(form);
+
+            fetch('@Url.Action("AssignStudentToCourse", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    form.reset(); // Clear the form
+                    setTimeout(() => location.reload(), 1000); // Delay reload to show toast
+                } else {
+                    showToast(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while assigning the student.', 'error');
+            });
+        }
+    </script>
+}

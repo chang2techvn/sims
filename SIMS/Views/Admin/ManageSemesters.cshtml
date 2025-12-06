@@ -24,7 +24,7 @@
                             <tbody>
                                 @foreach (var semester in Model.OrderByDescending(s => s.Year).ThenBy(s => s.Name))
                                 {
-                                    <tr>
+                                    <tr data-semester-id="@semester.SemesterId">
                                         <td>
                                             <strong>@semester.Name</strong>
                                         </td>
@@ -32,10 +32,10 @@
                                             <span class="badge bg-info">@semester.Year</span>
                                         </td>
                                         <td>
-                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit">
+                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit" onclick="editSemester(@semester.SemesterId, '@semester.Name', '@semester.Year')">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-link text-danger p-0" title="Delete">
+                                            <button class="btn btn-link text-danger p-0" title="Delete" onclick="deleteSemester(@semester.SemesterId, '@semester.Name @semester.Year')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -62,12 +62,12 @@
                 <h5><i class="fas fa-plus"></i> Add New Semester</h5>
             </div>
             <div class="card-body">
-                <form asp-action="CreateSemester" method="post">
+                <form id="createSemesterForm" method="post">
                     <div class="form-group">
                         <label class="form-label">
                             <i class="fas fa-calendar"></i> Semester Name
                         </label>
-                        <select name="Name" class="form-select" required>
+                        <select name="name" id="createSemesterName" class="form-select" required>
                             <option value="">Select Semester</option>
                             <option value="Spring">Spring</option>
                             <option value="Summer">Summer</option>
@@ -80,11 +80,11 @@
                         <label class="form-label">
                             <i class="fas fa-calendar-alt"></i> Year
                         </label>
-                        <input name="Year" type="number" class="form-control" placeholder="e.g., 2024" 
+                        <input name="year" id="createSemesterYear" type="number" class="form-control" placeholder="e.g., 2024" 
                                min="2020" max="2030" value="@DateTime.Now.Year" required />
                     </div>
                     
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="button" class="btn btn-primary w-100" onclick="createSemester()">
                         <i class="fas fa-plus"></i> Add Semester
                     </button>
                 </form>
@@ -112,3 +112,203 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Semester Modal -->
+<div class="modal fade" id="editSemesterModal" tabindex="-1" aria-labelledby="editSemesterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editSemesterModalLabel"><i class="fas fa-edit"></i> Edit Semester</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editSemesterId" />
+                <div class="form-group mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-calendar-alt"></i> Semester Name
+                    </label>
+                    <input id="editSemesterName" class="form-control" placeholder="Enter semester name" required />
+                </div>
+                <div class="form-group mb-3">
+                    <label class="form-label">
+                        <i class="fas fa-calendar"></i> Year
+                    </label>
+                    <input id="editSemesterYear" class="form-control" placeholder="Enter year" required />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="editSemesterAjax()">Update Semester</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Semester Modal -->
+<div class="modal fade" id="deleteSemesterModal" tabindex="-1" aria-labelledby="deleteSemesterModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteSemesterModalLabel"><i class="fas fa-trash"></i> Delete Semester</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the semester "<strong id="deleteSemesterName"></strong>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteSemester()">Delete Semester</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            var toastHtml = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            
+            // Create toast container if it doesn't exist
+            if (!$('#toast-container').length) {
+                $('body').append('<div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>');
+            }
+            
+            var $toast = $(toastHtml);
+            $('#toast-container').append($toast);
+            
+            var toast = new bootstrap.Toast($toast[0]);
+            toast.show();
+            
+            // Remove from DOM after hide
+            $toast.on('hidden.bs.toast', function() {
+                $(this).remove();
+            });
+        }
+
+        // Delete Semester
+        let deleteSemesterId = null;
+        let deleteSemesterName = null;
+
+        function editSemester(id, name, year) {
+            document.getElementById('editSemesterId').value = id;
+            document.getElementById('editSemesterName').value = name;
+            document.getElementById('editSemesterYear').value = year;
+            new bootstrap.Modal(document.getElementById('editSemesterModal')).show();
+        }
+
+        function deleteSemester(id, name) {
+            deleteSemesterId = id;
+            deleteSemesterName = name;
+            document.getElementById('deleteSemesterName').textContent = name;
+            new bootstrap.Modal(document.getElementById('deleteSemesterModal')).show();
+        }
+
+        function createSemester() {
+            const name = document.getElementById('createSemesterName').value;
+            const year = document.getElementById('createSemesterYear').value;
+            if (!name || !year) return;
+
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('year', year);
+
+            fetch('@Url.Action("CreateSemesterAjax", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('createSemesterForm').reset();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while creating the semester.', 'error');
+            });
+        }
+
+        function confirmDeleteSemester() {
+            if (!deleteSemesterId) return;
+
+            $.ajax({
+                url: '@Url.Action("DeleteSemester", "Admin")',
+                type: 'POST',
+                data: { id: deleteSemesterId },
+                success: function(response) {
+                    if (response.success) {
+                        bootstrap.Modal.getInstance(document.getElementById('deleteSemesterModal')).hide();
+                        showToast(response.message, 'success');
+                        
+                        // Remove row from table
+                        $(`tr[data-semester-id="${deleteSemesterId}"]`).fadeOut(300, function() {
+                            $(this).remove();
+                            
+                            // Check if table is empty
+                            if ($('#semestersTable tbody tr:visible').length === 0) {
+                                $('#semestersTable tbody').html(`
+                                    <tr>
+                                        <td colspan="3" class="text-center py-4">
+                                            <i class="fas fa-calendar-alt text-muted" style="font-size: 3rem;"></i>
+                                            <p class="text-muted mt-3">No semesters found. Create your first semester!</p>
+                                        </td>
+                                    </tr>
+                                `);
+                            }
+                        });
+                    } else {
+                        showToast(response.message || 'Failed to delete semester', 'danger');
+                    }
+                },
+                error: function() {
+                    showToast('An error occurred while deleting the semester.', 'error');
+                }
+            });
+        }
+
+        function editSemesterAjax() {
+            const id = document.getElementById('editSemesterId').value;
+            const name = document.getElementById('editSemesterName').value;
+            const year = document.getElementById('editSemesterYear').value;
+
+            if (!name || !year) return;
+
+            fetch('@Url.Action("EditSemesterAjax", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: id, name: name, year: year })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    bootstrap.Modal.getInstance(document.getElementById('editSemesterModal')).hide();
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while updating the semester.', 'error');
+            });
+        }
+    </script>
+}

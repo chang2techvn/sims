@@ -35,15 +35,56 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateDepartment(Department department)
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> CreateDepartmentAjax(string name)
         {
-            if (ModelState.IsValid)
+            try
             {
+                var department = new Department { Name = name };
                 _context.Departments.Add(department);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("ManageDepartments");
+                return Json(new { success = true, message = "Department created successfully!" });
             }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditDepartment(int id, string name)
+        {
+            var department = await _context.Departments.FindAsync(id);
+            if (department == null)
+            {
+                return NotFound();
+            }
+
+            department.Name = name;
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageDepartments");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteDepartment(int id)
+        {
+            try
+            {
+                var department = await _context.Departments.FindAsync(id);
+                if (department == null)
+                {
+                    return Json(new { success = false, message = "Department not found" });
+                }
+
+                _context.Departments.Remove(department);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Department deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // Manage Majors
@@ -207,15 +248,80 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateSemester(Semester semester)
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> CreateSemesterAjax(string name, string year)
         {
-            if (ModelState.IsValid)
+            try
             {
+                var semester = new Semester { Name = name, Year = year };
                 _context.Semesters.Add(semester);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("ManageSemesters");
+                return Json(new { success = true, message = "Semester created successfully!" });
             }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditSemester(int id, string name, string year)
+        {
+            var semester = await _context.Semesters.FindAsync(id);
+            if (semester == null)
+            {
+                return NotFound();
+            }
+
+            semester.Name = name;
+            semester.Year = year;
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageSemesters");
+        }
+
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> EditSemesterAjax(int id, string name, string year)
+        {
+            try
+            {
+                var semester = await _context.Semesters.FindAsync(id);
+                if (semester == null)
+                {
+                    return Json(new { success = false, message = "Semester not found." });
+                }
+
+                semester.Name = name;
+                semester.Year = year;
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, message = "Semester updated successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSemester(int id)
+        {
+            try
+            {
+                var semester = await _context.Semesters.FindAsync(id);
+                if (semester == null)
+                {
+                    return Json(new { success = false, message = "Semester not found" });
+                }
+
+                _context.Semesters.Remove(semester);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Semester deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         // Manage Subjects
@@ -235,6 +341,58 @@ namespace SIMS.Controllers
                 return RedirectToAction("ManageSubjects");
             }
             return RedirectToAction("ManageSubjects");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditSubject(int id, string code, string name)
+        {
+            var subject = await _context.Subjects.FindAsync(id);
+            if (subject == null)
+            {
+                return NotFound();
+            }
+
+            subject.Code = code;
+            subject.Name = name;
+            await _context.SaveChangesAsync();
+            return RedirectToAction("ManageSubjects");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSubject(int id)
+        {
+            var subject = await _context.Subjects.FindAsync(id);
+            if (subject == null)
+            {
+                return NotFound();
+            }
+
+            _context.Subjects.Remove(subject);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("ManageSubjects");
+        }
+
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> DeleteSubjectAjax(int id)
+        {
+            try
+            {
+                var subject = await _context.Subjects.FindAsync(id);
+                if (subject == null)
+                {
+                    return Json(new { success = false, message = "Subject not found." });
+                }
+
+                _context.Subjects.Remove(subject);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Subject deleted successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error deleting subject: " + ex.Message });
+            }
         }
 
         // Manage Courses
@@ -666,39 +824,105 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> AssignStudentToCourse(int studentId, int courseId)
         {
-            var existing = await _context.StudentCourses
-                .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
-            
-            if (existing == null)
+            try
             {
-                var studentCourse = new StudentCourse
-                {
-                    StudentId = studentId,
-                    CourseId = courseId
-                };
+                var existing = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
                 
-                _context.StudentCourses.Add(studentCourse);
-                await _context.SaveChangesAsync();
+                if (existing == null)
+                {
+                    var studentCourse = new StudentCourse
+                    {
+                        StudentId = studentId,
+                        CourseId = courseId
+                    };
+                    
+                    _context.StudentCourses.Add(studentCourse);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Student assigned to course successfully!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Student is already assigned to this course." });
+                }
             }
-            
-            return RedirectToAction("AssignStudentToCourse");
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
         }
 
         [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> RemoveStudentFromCourse(int studentId, int courseId)
         {
-            var studentCourse = await _context.StudentCourses
-                .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
-            
-            if (studentCourse != null)
+            try
             {
-                _context.StudentCourses.Remove(studentCourse);
-                await _context.SaveChangesAsync();
+                var studentCourse = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
+                
+                if (studentCourse != null)
+                {
+                    _context.StudentCourses.Remove(studentCourse);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Student removed from course successfully!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Assignment not found." });
+                }
             }
-            
-            return RedirectToAction("AssignStudentToCourse");
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
+        [HttpGet]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> GetCourseStudents(int courseId)
+        {
+            try
+            {
+                var course = await _context.Courses
+                    .Include(c => c.Subject)
+                    .Include(c => c.Semester)
+                    .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+                if (course == null)
+                {
+                    return Json(new { success = false, message = "Course not found." });
+                }
+
+                var students = await _context.StudentCourses
+                    .Where(sc => sc.CourseId == courseId)
+                    .Include(sc => sc.Student)
+                    .ThenInclude(s => s.User)
+                    .Select(sc => new
+                    {
+                        studentId = sc.Student.StudentId,
+                        name = sc.Student.User.Name,
+                        email = sc.Student.User.Email,
+                        avatar = sc.Student.User.Avatar
+                    })
+                    .ToListAsync();
+
+                return Json(new
+                {
+                    success = true,
+                    courseName = course.CourseName,
+                    subjectName = course.Subject.Name,
+                    semesterName = $"{course.Semester.Name} {course.Semester.Year}",
+                    students = students
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
         }
     }
 }

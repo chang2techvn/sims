@@ -55,6 +55,33 @@ namespace SIMS.Data
                 .HasForeignKey(c => c.LecturerId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Configure Major relationships
+            builder.Entity<Major>()
+                .HasOne(m => m.Department)
+                .WithMany(d => d.Majors)
+                .HasForeignKey(m => m.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Lecturer relationships
+            builder.Entity<Lecturer>()
+                .HasOne(l => l.Department)
+                .WithMany(d => d.Lecturers)
+                .HasForeignKey(l => l.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Course relationships
+            builder.Entity<Course>()
+                .HasOne(c => c.Subject)
+                .WithMany(s => s.Courses)
+                .HasForeignKey(c => c.SubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Course>()
+                .HasOne(c => c.Semester)
+                .WithMany(s => s.Courses)
+                .HasForeignKey(c => c.SemesterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // Configure one-to-one relationships
             builder.Entity<Student>()
                 .HasOne(s => s.User)
