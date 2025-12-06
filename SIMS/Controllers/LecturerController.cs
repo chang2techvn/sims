@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using SIMS.Data;
 using SIMS.Models;
 using SIMS.Models.ViewModels;
-using System;
 
 namespace SIMS.Controllers
 {
@@ -40,45 +39,70 @@ namespace SIMS.Controllers
                 .Include(c => c.Major)
                 .ToListAsync();
 
-            return View(courses);
+            var courseViewModels = new List<LecturerCourseViewModel>();
+
+            foreach (var course in courses)
+            {
+                var studentCount = await _context.StudentCourses
+                    .CountAsync(sc => sc.CourseId == course.CourseId);
+
+                courseViewModels.Add(new LecturerCourseViewModel
+                {
+                    Course = course,
+                    StudentCount = studentCount
+                });
+            }
+
+            return View(courseViewModels);
         }
 
         public async Task<IActionResult> CourseStudents(int courseId)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || !string.Equals(user.Role, "Lecturer", StringComparison.OrdinalIgnoreCase))
+            try
             {
-                return Forbid();
-            }
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null || !string.Equals(user.Role, "Lecturer", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Forbid();
+                }
 
-            var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
-            if (lecturer == null)
+                var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
+                if (lecturer == null)
+                {
+                    return NotFound();
+                }
+
+                // Verify lecturer owns this course
+                var course = await _context.Courses
+                    .Include(c => c.Subject)
+                    .Include(c => c.Semester)
+                    .Include(c => c.Major)
+                    .FirstOrDefaultAsync(c => c.CourseId == courseId && c.LecturerId == lecturer.LecturerId);
+
+                if (course == null)
+                {
+                    TempData["Error"] = "Course not found or you don't have permission to view it.";
+                    return RedirectToAction("MyCourses");
+                }
+
+                var students = await _context.StudentCourses
+                    .Where(sc => sc.CourseId == courseId)
+                    .Include(sc => sc.Student)
+                    .ThenInclude(s => s.User)
+                    .Include(sc => sc.Student)
+                    .ThenInclude(s => s.Major)
+                    .Select(sc => sc.Student)
+                    .ToListAsync();
+
+                ViewBag.Course = course;
+                return View(students);
+            }
+            catch (Exception ex)
             {
-                return NotFound();
+                // Log the exception (you might want to use a proper logging framework)
+                TempData["Error"] = $"An error occurred while loading course students: {ex.Message}";
+                return RedirectToAction("MyCourses");
             }
-
-            // Verify lecturer owns this course
-            var course = await _context.Courses
-                .Include(c => c.Subject)
-                .Include(c => c.Semester)
-                .FirstOrDefaultAsync(c => c.CourseId == courseId && c.LecturerId == lecturer.LecturerId);
-
-            if (course == null)
-            {
-                return Forbid();
-            }
-
-            var students = await _context.StudentCourses
-                .Where(sc => sc.CourseId == courseId)
-                .Include(sc => sc.Student)
-                .ThenInclude(s => s.User)
-                .Include(sc => sc.Student)
-                .ThenInclude(s => s.Major)
-                .Select(sc => sc.Student)
-                .ToListAsync();
-
-            ViewBag.Course = course;
-            return View(students);
         }
 
         public async Task<IActionResult> ViewProfile()

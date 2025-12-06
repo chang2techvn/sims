@@ -67,12 +67,14 @@
                             <input type="email" class="form-control profile-field" id="Email" name="Email" value="@Model.Email" readonly>                        </div>
                         </div>
                     
-                    @if (Model.Role.ToLower() == "student")
+                    @if (!string.IsNullOrEmpty(Model.StudentCode))
                     {
                         <div class="row mb-3">
                             <label class="col-md-3 col-form-label"><strong><i class="fas fa-id-card text-info"></i> Student Code:</strong></label>
                             <div class="col-md-9">
-                                <input type="text" class="form-control profile-field" id="StudentCode" name="StudentCode" value="@Model.StudentCode" placeholder="BC00132" readonly>
+                                <div class="form-control bg-light">
+                                    <text>@Model.StudentCode</text>
+                                </div>
                             </div>
                         </div>
                     }

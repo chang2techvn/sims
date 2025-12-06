@@ -1125,3 +1125,128 @@ input[type="submit"].btn-primary:hover {
     box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25) !important;
 }
 
+/* Lecturer MyCourses Page Styles */
+.bg-gradient-primary {
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--dark-orange) 100%);
+}
+
+.stat-card-mini {
+    background: var(--white);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--gray-200);
+}
+
+.stat-card-mini .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-card-mini .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.course-card {
+    transition: all 0.3s ease;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.course-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.course-card .card-header {
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+.course-card .card-header i {
+    color: white;
+}
+
+.course-card .card-body {
+    padding: 1.5rem;
+}
+
+.course-card .card-footer {
+    padding: 1rem 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.875rem;
+}
+
+.info-item i {
+    width: 16px;
+    margin-right: 0.5rem;
+}
+
+.info-item strong {
+    margin-left: 0.25rem;
+}
+
+.empty-state-icon {
+    opacity: 0.5;
+}
+
+.stat-card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 2rem 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid var(--gray-200);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card .stat-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+.stat-card .stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stat-card-mini {
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card-mini .stat-number {
+        font-size: 1.25rem;
+    }
+
+    .course-card .card-body {
+        padding: 1rem;
+    }
+
+    .course-card .card-footer {
+        padding: 0.75rem 1rem;
+    }
+}
+
