@@ -4,25 +4,25 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SIMS.Data;
 using SIMS.Models;
+using SIMS.Models.ViewModels;
+using System;
 
 namespace SIMS.Controllers
 {
     [Authorize]
-    public class LecturerController : Controller
+    public class LecturerController : BaseController
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<User> _userManager;
 
-        public LecturerController(ApplicationDbContext context, UserManager<User> userManager)
+        public LecturerController(ApplicationDbContext context, UserManager<User> userManager) : base(userManager)
         {
             _context = context;
-            _userManager = userManager;
         }
 
         public async Task<IActionResult> MyCourses()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null || user.Role != "lecturer")
+            if (user == null || !string.Equals(user.Role, "Lecturer", StringComparison.OrdinalIgnoreCase))
             {
                 return Forbid();
             }
@@ -43,45 +43,10 @@ namespace SIMS.Controllers
             return View(courses);
         }
 
-        public async Task<IActionResult> ViewAssignedClasses()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || user.Role != "lecturer")
-            {
-                return Forbid();
-            }
-
-            var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
-            if (lecturer == null)
-            {
-                return NotFound();
-            }
-
-            var assignedClasses = await _context.StudentCourses
-                .Where(sc => sc.Course.LecturerId == lecturer.LecturerId)
-                .Include(sc => sc.Course)
-                .ThenInclude(c => c.Subject)
-                .Include(sc => sc.Course)
-                .ThenInclude(c => c.Semester)
-                .Include(sc => sc.Student)
-                .ThenInclude(s => s.User)
-                .Include(sc => sc.Student)
-                .ThenInclude(s => s.Major)
-                .GroupBy(sc => sc.Course)
-                .Select(g => new
-                {
-                    Course = g.Key,
-                    Students = g.Select(sc => sc.Student).ToList()
-                })
-                .ToListAsync();
-
-            return View(assignedClasses);
-        }
-
         public async Task<IActionResult> CourseStudents(int courseId)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null || user.Role != "lecturer")
+            if (user == null || !string.Equals(user.Role, "Lecturer", StringComparison.OrdinalIgnoreCase))
             {
                 return Forbid();
             }

@@ -23,6 +23,7 @@ namespace SIMS.Controllers
                 {
                     ViewBag.UserRole = user.Role;
                     ViewBag.UserName = user.Name;
+                    ViewBag.UserAvatar = user.Avatar;
                 }
             }
 

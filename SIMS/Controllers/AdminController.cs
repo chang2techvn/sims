@@ -13,13 +13,17 @@ namespace SIMS.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _cache;
+        private readonly ILogger<AdminController> _logger;
         private const string USER_STATS_CACHE_KEY = "UserStatistics";
-        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromHours(1);
 
-        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache) : base(userManager)
+        private record UserStatistics(int StudentCount, int LecturerCount, int AdminCount);
+
+        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache, ILogger<AdminController> logger) : base(userManager)
         {
             _context = context;
             _cache = cache;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -134,9 +138,6 @@ namespace SIMS.Controllers
                 _context.Majors.Add(major);
                 await _context.SaveChangesAsync();
 
-                // Invalidate cache
-                await InvalidateUserStatsCache();
-
                 return Json(new { success = true, message = "Major created successfully!", majorId = major.MajorId });
             }
             catch (Exception ex)
@@ -174,9 +175,6 @@ namespace SIMS.Controllers
                 major.DepartmentId = DepartmentId;
 
                 await _context.SaveChangesAsync();
-
-                // Invalidate cache
-                await InvalidateUserStatsCache();
 
                 return Json(new
                 {
@@ -227,9 +225,6 @@ namespace SIMS.Controllers
 
                 _context.Majors.Remove(major);
                 await _context.SaveChangesAsync();
-
-                // Invalidate cache
-                await InvalidateUserStatsCache();
 
                 return Json(new { success = true, message = "Major deleted successfully!" });
             }
@@ -582,28 +577,6 @@ namespace SIMS.Controllers
         public async Task<IActionResult> ManageUsers()
         {
             var users = await base._userManager.Users.ToListAsync();
-            
-            // Get statistics from cache or calculate
-            var stats = await _cache.GetOrCreateAsync(USER_STATS_CACHE_KEY, async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = CACHE_DURATION;
-                
-                var roles = await _userManager.Users
-                    .Select(u => u.Role.ToLower())
-                    .ToListAsync();
-                
-                return new
-                {
-                    StudentCount = roles.Count(r => r == "student"),
-                    LecturerCount = roles.Count(r => r == "lecturer"),
-                    AdminCount = roles.Count(r => r == "admin")
-                };
-            });
-            
-            ViewBag.StudentCount = stats!.StudentCount;
-            ViewBag.LecturerCount = stats.LecturerCount;
-            ViewBag.AdminCount = stats.AdminCount;
-            
             return View(users);
         }
         

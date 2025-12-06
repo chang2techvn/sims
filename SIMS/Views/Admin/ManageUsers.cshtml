@@ -3,64 +3,7 @@
     ViewData["Title"] = "Manage Users";
 }
 
-<!-- Statistics Cards -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="stat-content">
-                <div class="stat-info">
-                    <div class="stat-label">Students</div>
-                    <div class="stat-value">@ViewBag.StudentCount</div>
-                </div>
-                <div class="stat-icon-clean">
-                    <i class="fas fa-user-graduate" style="color: #ff6b35;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="stat-content">
-                <div class="stat-info">
-                    <div class="stat-label">Lecturers</div>
-                    <div class="stat-value">@ViewBag.LecturerCount</div>
-                </div>
-                <div class="stat-icon-clean">
-                    <i class="fas fa-chalkboard-teacher" style="color: #10b981;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="stat-content">
-                <div class="stat-info">
-                    <div class="stat-label">Admins</div>
-                    <div class="stat-value">@ViewBag.AdminCount</div>
-                </div>
-                <div class="stat-icon-clean">
-                    <i class="fas fa-user-shield" style="color: #f59e0b;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="stat-content">
-                <div class="stat-info">
-                    <div class="stat-label">Total Users</div>
-                    <div class="stat-value">@Model.Count()</div>
-                </div>
-                <div class="stat-icon-clean">
-                    <i class="fas fa-users" style="color: #3b82f6;"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Statistics cards removed as requested -->
 
 <!-- Users Table Card -->
 <div class="card">
@@ -83,6 +26,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
+                            <th>No.</th>
                             <th>Avatar</th>
                             <th>Student Code</th>
                             <th>Name</th>
@@ -95,9 +39,11 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @{ int counter = 1; }
                         @foreach (var user in Model)
                         {
                             <tr style="cursor: pointer;" onclick="editUser('@user.Id')">
+                                <td>@counter</td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(user.Avatar))
                                     {
@@ -153,6 +99,7 @@
                                     </button>
                                 </td>
                             </tr>
+                            counter++;
                         }
                     </tbody>
                 </table>
@@ -506,7 +453,7 @@
         if (visibleRows === 0 && searchValue !== '') {
             if ($('#noResultsMessage').length === 0) {
                 $('table tbody').append(
-                    '<tr id="noResultsMessage"><td colspan="9" class="text-center text-muted py-4">' +
+                    '<tr id="noResultsMessage"><td colspan="10" class="text-center text-muted py-4">' +
                     '<i class="fas fa-search" style="font-size: 2rem;"></i>' +
                     '<p class="mt-2">No users found matching your search.</p>' +
                     '</td></tr>'

@@ -6,14 +6,18 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-graduation-cap"></i> Majors List</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Majors List</h5>
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="majorSearchInput" class="form-control search-input" placeholder="Search majors...">
+                </div>
             </div>
             <div class="card-body">
                 @if (Model.Any())
                 {
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table id="majorsTable" class="table table-hover">
                             <thead>
                                 <tr>
                                     <th>ID</th>
@@ -307,6 +311,40 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             createMajor();
         });
+    }
+});
+
+// Search Majors Function
+$('#majorSearchInput').on('keyup', function() {
+    const searchValue = $(this).val().toLowerCase();
+    
+    $('#majorsTable tbody tr').each(function() {
+        const row = $(this);
+        // Skip the "no majors found" message row
+        if (row.attr('id') === 'noResultsMessage') return;
+        
+        const text = row.text().toLowerCase();
+        
+        if (text.includes(searchValue)) {
+            row.show();
+        } else {
+            row.hide();
+        }
+    });
+    
+    // Show message if no results
+    const visibleRows = $('#majorsTable tbody tr:visible').not('#noResultsMessage').length;
+    if (visibleRows === 0 && searchValue !== '') {
+        if ($('#noResultsMessage').length === 0) {
+            $('#majorsTable tbody').append(
+                '<tr id="noResultsMessage"><td colspan="4" class="text-center text-muted py-4">' +
+                '<i class="fas fa-search" style="font-size: 2rem;"></i>' +
+                '<p class="mt-2">No majors found matching your search.</p>' +
+                '</td></tr>'
+            );
+        }
+    } else {
+        $('#noResultsMessage').remove();
     }
 });
 </script>

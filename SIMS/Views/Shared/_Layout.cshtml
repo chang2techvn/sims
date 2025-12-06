@@ -24,12 +24,15 @@
 
                 <nav class="sidebar-nav">
                     <ul class="nav-menu">
-                        <li class="nav-item">
-                            <a href="@Url.Action("Dashboard", "Home")" class="nav-link">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
+                        @if (User.IsInRole("Admin") || (ViewBag.UserRole?.ToString()?.ToLower() == "admin"))
+                        {
+                            <li class="nav-item">
+                                <a href="@Url.Action("Dashboard", "Home")" class="nav-link">
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    <span>Dashboard</span>
+                                </a>
+                            </li>
+                        }
 
                         @if (User.IsInRole("Admin") || (ViewBag.UserRole?.ToString()?.ToLower() == "admin"))
                         {
@@ -107,12 +110,6 @@
                                     <span>My Courses</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("ViewAssignedClasses", "Lecturer")" class="nav-link">
-                                    <i class="fas fa-users"></i>
-                                    <span>Assigned Classes</span>
-                                </a>
-                            </li>
                         }
 
                         <li class="nav-item">
@@ -148,9 +145,18 @@
                                     <span class="notification-badge">3</span>
                                 </div>
                                 <div class="separator"></div>
-                                <div class="user-avatar">
-                                    <i class="fas fa-user-circle"></i>
-                                </div>
+                                <a href="@Url.Action("Profile", "Account")" class="user-avatar-link">
+                                    <div class="user-avatar">
+                                        @if (!string.IsNullOrEmpty(ViewBag.UserAvatar))
+                                        {
+                                            <img src="@ViewBag.UserAvatar" alt="Avatar" class="user-avatar-img">
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-user-circle"></i>
+                                        }
+                                    </div>
+                                </a>
                                 <div class="user-details">
                                     <h6>@User.Identity.Name</h6>
                                     <small>@ViewBag.UserRole</small>

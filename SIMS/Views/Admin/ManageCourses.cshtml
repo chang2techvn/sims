@@ -6,14 +6,21 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-book"></i> Courses List</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-book"></i> Courses List</h5>
+                <div class="d-flex gap-2 align-items-center">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="courseSearchInput" class="form-control search-input" placeholder="Search courses...">
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table id="coursesTable" class="table table-hover">
                         <thead>
                             <tr>
+                                <th>No.</th>
                                 <th>Course Name</th>
                                 <th>Subject</th>
                                 <th>Semester</th>
@@ -25,9 +32,11 @@
                         <tbody>
                             @if (Model.Any())
                             {
+                                int counter = 1;
                                 @foreach (var course in Model)
                                 {
-                                    <tr data-course-id="@course.CourseId">
+                                    <tr data-course-id="@course.CourseId" data-subject-id="@course.SubjectId" data-semester-id="@course.SemesterId" data-major-id="@course.MajorId" data-lecturer-id="@course.LecturerId">
+                                        <td>@counter</td>
                                         <td>
                                             <strong>@course.CourseName</strong>
                                             <br><small class="text-muted">@course.Subject.Code</small>
@@ -50,12 +59,13 @@
                                             </button>
                                         </td>
                                     </tr>
+                                    counter++;
                                 }
                             }
                             else
                             {
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="7" class="text-center py-4">
                                         <i class="fas fa-book text-muted" style="font-size: 3rem;"></i>
                                         <p class="text-muted mt-3">No courses found. Create your first course!</p>
                                     </td>
@@ -189,7 +199,7 @@
                             <option value="">Select Lecturer</option>
                             @foreach (var lecturer in ViewBag.Lecturers as List<SIMS.Models.Lecturer>)
                             {
-                                <option value="@lecturer.LecturerId">@lecturer.User.Name</option>
+                                <option value="@lecturer.LecturerId">@lecturer.User!.Name</option>
                             }
                         </select>
                     </div>
@@ -289,9 +299,14 @@
                     var course = response.course;
                     var courseNameEscaped = (course.courseName || '').replace(/'/g, "\\'");
                     
+                    // Calculate next counter
+                    var currentRows = $('#coursesTable tbody tr').length;
+                    var nextCounter = currentRows + 1;
+                    
                     // Add new row to table
                     var newRow = `
-                        <tr data-course-id="${course.courseId}">
+                        <tr data-course-id="${course.courseId}" data-subject-id="${course.subjectId}" data-semester-id="${course.semesterId}" data-major-id="${course.majorId}" data-lecturer-id="${course.lecturerId}">
+                            <td>${nextCounter}</td>
                             <td>
                                 <strong>${course.courseName || 'N/A'}</strong>
                                 <br><small class="text-muted">${course.subjectCode || 'N/A'}</small>
@@ -446,7 +461,7 @@
                         if ($('#coursesTable tbody tr:visible').length === 0) {
                             $('#coursesTable tbody').html(`
                                 <tr>
-                                    <td colspan="6" class="text-center py-4">
+                                    <td colspan="7" class="text-center py-4">
                                         <i class="fas fa-book text-muted" style="font-size: 3rem;"></i>
                                         <p class="text-muted mt-3">No courses found. Create your first course!</p>
                                     </td>
@@ -552,6 +567,84 @@
                     </div>
                 `;
             });
+    }
+
+    // Search Courses Function
+    $('#courseSearchInput').on('keyup', function() {
+        applyFilters();
+    });
+
+    // Filter Courses Function
+    let currentFilter = { type: 'all', value: null };
+
+    function filterCourses(filterType, filterValue = null) {
+        currentFilter = { type: filterType, value: filterValue };
+        
+        // Update dropdown button text
+        const button = $('#filterDropdown');
+        if (filterType === 'all') {
+            button.html('<i class="fas fa-filter"></i> Filter');
+        } else {
+            let filterText = '';
+            switch(filterType) {
+                case 'subject': filterText = 'Subject'; break;
+                case 'semester': filterText = 'Semester'; break;
+                case 'major': filterText = 'Major'; break;
+                case 'lecturer': filterText = 'Lecturer'; break;
+            }
+            button.html('<i class="fas fa-filter"></i> ' + filterText);
+        }
+        
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const searchValue = $('#courseSearchInput').val().toLowerCase();
+        
+        $('#coursesTable tbody tr').each(function() {
+            const row = $(this);
+            
+            // Skip the no results message row
+            if (row.attr('id') === 'noResultsMessage') return;
+            
+            const rowText = row.text().toLowerCase();
+            let showRow = true;
+            
+            // Apply search filter
+            if (searchValue !== '' && !rowText.includes(searchValue)) {
+                showRow = false;
+            }
+            
+            // Apply category filter
+            if (showRow && currentFilter.type !== 'all') {
+                const dataAttr = 'data-' + currentFilter.type + '-id';
+                const rowValue = row.attr(dataAttr);
+                if (rowValue !== currentFilter.value) {
+                    showRow = false;
+                }
+            }
+            
+            if (showRow) {
+                row.show();
+            } else {
+                row.hide();
+            }
+        });
+        
+        // Show message if no results
+        const visibleRows = $('#coursesTable tbody tr:visible').not('#noResultsMessage').length;
+        if (visibleRows === 0) {
+            if ($('#noResultsMessage').length === 0) {
+                $('#coursesTable tbody').append(
+                    '<tr id="noResultsMessage"><td colspan="7" class="text-center text-muted py-4">' +
+                    '<i class="fas fa-search" style="font-size: 2rem;"></i>' +
+                    '<p class="mt-2">No courses found matching your criteria.</p>' +
+                    '</td></tr>'
+                );
+            }
+        } else {
+            $('#noResultsMessage').remove();
+        }
     }
 </script>
 }

@@ -162,7 +162,7 @@
                         <option value="">Select Major</option>
                         @foreach (var major in ViewBag.Majors as List<SIMS.Models.Major>)
                         {
-                            <option value="@major.MajorId">@major.Name (@major.Department.Name)</option>
+                            <option value="@major.MajorId">@major.Name (@major.Department!.Name)</option>
                         }
                     </select>
                     <span asp-validation-for="MajorId" class="text-danger small"></span>

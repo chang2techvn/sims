@@ -7,18 +7,16 @@ using SIMS.Models.ViewModels;
 
 namespace SIMS.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : BaseController
     {
-        private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
         private readonly ApplicationDbContext _context;
 
         public AccountController(
             UserManager<User> userManager,
             SignInManager<User> signInManager,
-            ApplicationDbContext context)
+            ApplicationDbContext context) : base(userManager)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
             _context = context;
         }

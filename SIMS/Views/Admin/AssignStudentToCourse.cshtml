@@ -6,16 +6,21 @@
 <div class="row">
     <div class="col-lg-8">
         <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-user-plus"></i> Current Student-Course Assignments</h5>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Majors List</h5>
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="assignmentSearchInput" class="form-control search-input" placeholder="Search assignments...">
+                </div>
             </div>
             <div class="card-body">
                 @if (Model.Any())
                 {
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="assignmentsTable">
                             <thead>
                                 <tr>
+                                    <th>No.</th>
                                     <th>Student</th>
                                     <th>Course</th>
                                     <th>Subject</th>
@@ -24,9 +29,11 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @{ int counter = 1; }
                                 @foreach (var assignment in Model)
                                 {
                                     <tr>
+                                        <td>@counter</td>
                                         <td>
                                             <strong>@assignment.Student.User.Name</strong>
                                             <br><small class="text-muted">@assignment.Student.User.Email</small>
@@ -47,6 +54,7 @@
                                             </button>
                                         </td>
                                     </tr>
+                                    counter++;
                                 }
                             </tbody>
                         </table>
@@ -244,5 +252,39 @@
                 showToast('An error occurred while assigning the student.', 'error');
             });
         }
+
+// Search Assignments Function
+$('#assignmentSearchInput').on('keyup', function() {
+    const searchValue = $(this).val().toLowerCase();
+    
+    $('#assignmentsTable tbody tr').each(function() {
+        const row = $(this);
+        // Skip the "no assignments found" message row
+        if (row.attr('id') === 'noResultsMessage') return;
+        
+        const text = row.text().toLowerCase();
+        
+        if (text.includes(searchValue)) {
+            row.show();
+        } else {
+            row.hide();
+        }
+    });
+    
+    // Show message if no results
+    const visibleRows = $('#assignmentsTable tbody tr:visible').not('#noResultsMessage').length;
+    if (visibleRows === 0 && searchValue !== '') {
+        if ($('#noResultsMessage').length === 0) {
+            $('#assignmentsTable tbody').append(
+                '<tr id="noResultsMessage"><td colspan="6" class="text-center text-muted py-4">' +
+                '<i class="fas fa-search" style="font-size: 2rem;"></i>' +
+                '<p class="mt-2">No assignments found matching your search.</p>' +
+                '</td></tr>'
+            );
+        }
+    } else {
+        $('#noResultsMessage').remove();
+    }
+});
     </script>
 }

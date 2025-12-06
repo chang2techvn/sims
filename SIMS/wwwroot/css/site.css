@@ -1072,4 +1072,56 @@ input[type="submit"].btn-primary:hover {
     border-color: var(--dark-orange) !important;
 }
 
+/* Header User Avatar Link */
+.user-avatar-link {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease;
+}
+
+.user-avatar-link:hover {
+    opacity: 0.8;
+}
+
+.user-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
+/* Filter Button Styling */
+.filter-btn {
+    background: linear-gradient(135deg, var(--primary-orange) 0%, var(--dark-orange) 100%) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 500;
+    box-shadow: 0 2px 4px rgba(255, 107, 53, 0.2);
+    transition: all 0.3s ease;
+}
+
+.filter-btn i,
+.filter-btn .fas,
+.filter-btn .far,
+.filter-btn .fab {
+    color: white !important;
+}
+
+.filter-btn:hover {
+    background: linear-gradient(135deg, var(--dark-orange) 0%, #d14a22 100%) !important;
+    box-shadow: 0 4px 8px rgba(255, 107, 53, 0.3);
+    color: white !important;
+}
+
+.filter-btn:hover i,
+.filter-btn:hover .fas,
+.filter-btn:hover .far,
+.filter-btn:hover .fab {
+    color: white !important;
+}
+
+.filter-btn:focus {
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25) !important;
+}
 
