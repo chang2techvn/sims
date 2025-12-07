@@ -8,5 +8,6 @@ namespace SIMS.Services.Interfaces
         Task CreateSemesterAsync(string name, DateTime startDate, DateTime endDate);
         Task UpdateSemesterAsync(int id, string name, DateTime startDate, DateTime endDate);
         Task DeleteSemesterAsync(int id);
+        Task<Semester?> GetSemesterAsync(int id);
     }
 }

@@ -8,5 +8,6 @@ namespace SIMS.Services.Interfaces
         Task CreateCourseAsync(Course course);
         Task UpdateCourseAsync(int id, Course course);
         Task DeleteCourseAsync(int id);
+        Task<Course?> GetCourseAsync(int id);
     }
 }

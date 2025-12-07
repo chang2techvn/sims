@@ -8,5 +8,6 @@ namespace SIMS.Services.Interfaces
         Task CreateMajorAsync(string name, int departmentId);
         Task UpdateMajorAsync(int majorId, string name, int departmentId);
         Task DeleteMajorAsync(int majorId);
+        Task<Major?> GetMajorAsync(int id);
     }
 }

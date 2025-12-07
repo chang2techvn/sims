@@ -1,21 +1,19 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SIMS.Data;
 using SIMS.Models;
-using SIMS.Models.ViewModels;
+using SIMS.Services.Interfaces;
 
 namespace SIMS.Controllers
 {
     [Authorize]
     public class LecturerController : BaseController
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ILecturerService _lecturerService;
 
-        public LecturerController(ApplicationDbContext context, UserManager<User> userManager) : base(userManager)
+        public LecturerController(ILecturerService lecturerService, UserManager<User> userManager) : base(userManager)
         {
-            _context = context;
+            _lecturerService = lecturerService;
         }
 
         public async Task<IActionResult> MyCourses()
@@ -26,31 +24,10 @@ namespace SIMS.Controllers
                 return Forbid();
             }
 
-            var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
-            if (lecturer == null)
+            var courseViewModels = await _lecturerService.GetLecturerCoursesAsync(user.Id);
+            if (courseViewModels == null)
             {
                 return NotFound();
-            }
-
-            var courses = await _context.Courses
-                .Where(c => c.LecturerId == lecturer.LecturerId)
-                .Include(c => c.Subject)
-                .Include(c => c.Semester)
-                .Include(c => c.Major)
-                .ToListAsync();
-
-            var courseViewModels = new List<LecturerCourseViewModel>();
-
-            foreach (var course in courses)
-            {
-                var studentCount = await _context.StudentCourses
-                    .CountAsync(sc => sc.CourseId == course.CourseId);
-
-                courseViewModels.Add(new LecturerCourseViewModel
-                {
-                    Course = course,
-                    StudentCount = studentCount
-                });
             }
 
             return View(courseViewModels);
@@ -66,33 +43,13 @@ namespace SIMS.Controllers
                     return Forbid();
                 }
 
-                var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
-                if (lecturer == null)
-                {
-                    return NotFound();
-                }
+                var (course, students) = await _lecturerService.GetCourseStudentsAsync(user.Id, courseId);
 
-                // Verify lecturer owns this course
-                var course = await _context.Courses
-                    .Include(c => c.Subject)
-                    .Include(c => c.Semester)
-                    .Include(c => c.Major)
-                    .FirstOrDefaultAsync(c => c.CourseId == courseId && c.LecturerId == lecturer.LecturerId);
-
-                if (course == null)
+                if (course == null || students == null)
                 {
                     TempData["Error"] = "Course not found or you don't have permission to view it.";
                     return RedirectToAction("MyCourses");
                 }
-
-                var students = await _context.StudentCourses
-                    .Where(sc => sc.CourseId == courseId)
-                    .Include(sc => sc.Student)
-                    .ThenInclude(s => s.User)
-                    .Include(sc => sc.Student)
-                    .ThenInclude(s => s.Major)
-                    .Select(sc => sc.Student)
-                    .ToListAsync();
 
                 // Pagination
                 int page = 1;
@@ -136,12 +93,15 @@ namespace SIMS.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var lecturer = await _context.Lecturers
-                .Include(l => l.Department)
-                .FirstOrDefaultAsync(l => l.UserId == user.Id);
+            var (userProfile, lecturer) = await _lecturerService.GetLecturerProfileAsync(user.Id);
+
+            if (userProfile == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
 
             ViewBag.Lecturer = lecturer;
-            return View(user);
+            return View(userProfile);
         }
     }
 }

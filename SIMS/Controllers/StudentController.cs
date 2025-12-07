@@ -1,21 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using SIMS.Data;
 using SIMS.Models;
+using SIMS.Services.Interfaces;
 
 namespace SIMS.Controllers
 {
     [Authorize]
     public class StudentController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IStudentService _studentService;
         private readonly UserManager<User> _userManager;
 
-        public StudentController(ApplicationDbContext context, UserManager<User> userManager)
+        public StudentController(IStudentService studentService, UserManager<User> userManager)
         {
-            _context = context;
+            _studentService = studentService;
             _userManager = userManager;
         }
 
@@ -27,27 +26,7 @@ namespace SIMS.Controllers
                 return Forbid();
             }
 
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
-            if (student == null)
-            {
-                return NotFound();
-            }
-
-            // Load course IDs first, then query Courses with explicit includes to ensure nested navigation properties are populated
-            var courseIds = await _context.StudentCourses
-                .Where(sc => sc.StudentId == student.StudentId)
-                .Select(sc => sc.CourseId)
-                .ToListAsync();
-
-            var courses = await _context.Courses
-                .Where(c => courseIds.Contains(c.CourseId))
-                .Include(c => c.Subject)
-                .Include(c => c.Lecturer)
-                    .ThenInclude(l => l.User)
-                .Include(c => c.Semester)
-                .Include(c => c.Major)
-                .ToListAsync();
-
+            var courses = await _studentService.GetStudentCoursesAsync(user.Id);
             return View(courses);
         }
 
@@ -59,45 +38,13 @@ namespace SIMS.Controllers
                 return Forbid();
             }
 
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
-            if (student == null)
-            {
-                return NotFound();
-            }
+            var (course, enrolledStudents) = await _studentService.GetCourseDetailsAsync(user.Id, courseId);
 
-            // Check if student is enrolled in this course
-            var isEnrolled = await _context.StudentCourses
-                .AnyAsync(sc => sc.StudentId == student.StudentId && sc.CourseId == courseId);
-
-            if (!isEnrolled)
+            if (course == null || enrolledStudents == null)
             {
                 TempData["Error"] = "You are not enrolled in this course.";
                 return RedirectToAction("MyCourses");
             }
-
-            // Get course details
-            var course = await _context.Courses
-                .Include(c => c.Subject)
-                .Include(c => c.Lecturer)
-                    .ThenInclude(l => l.User)
-                .Include(c => c.Semester)
-                .Include(c => c.Major)
-                .FirstOrDefaultAsync(c => c.CourseId == courseId);
-
-            if (course == null)
-            {
-                return NotFound();
-            }
-
-            // Get enrolled students
-            var enrolledStudents = await _context.StudentCourses
-                .Where(sc => sc.CourseId == courseId)
-                .Include(sc => sc.Student)
-                    .ThenInclude(s => s.User)
-                .Include(sc => sc.Student)
-                    .ThenInclude(s => s.Major)
-                .Select(sc => sc.Student)
-                .ToListAsync();
 
             // Pagination
             int page = 1;
@@ -134,13 +81,15 @@ namespace SIMS.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var student = await _context.Students
-                .Include(s => s.Major)
-                .ThenInclude(m => m.Department)
-                .FirstOrDefaultAsync(s => s.UserId == user.Id);
+            var (userProfile, student) = await _studentService.GetStudentProfileAsync(user.Id);
+
+            if (userProfile == null)
+            {
+                return RedirectToAction("Login", "Account");
+            }
 
             ViewBag.Student = student;
-            return View(user);
+            return View(userProfile);
         }
 
 

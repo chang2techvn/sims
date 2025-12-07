@@ -8,5 +8,6 @@ namespace SIMS.Services.Interfaces
         Task CreateSubjectAsync(string name, string code);
         Task UpdateSubjectAsync(int id, string name, string code);
         Task DeleteSubjectAsync(int id);
+        Task<Subject?> GetSubjectAsync(int id);
     }
 }

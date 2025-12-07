@@ -54,5 +54,15 @@ namespace SIMS.Services.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Course?> GetCourseAsync(int id)
+        {
+            return await _context.Courses
+                .Include(c => c.Subject)
+                .Include(c => c.Semester)
+                .Include(c => c.Major)
+                .Include(c => c.Lecturer)
+                .FirstOrDefaultAsync(c => c.CourseId == id);
+        }
     }
 }

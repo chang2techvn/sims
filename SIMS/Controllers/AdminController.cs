@@ -29,10 +29,13 @@ namespace SIMS.Controllers
         private readonly ISubjectService _subjectService;
         private readonly ICourseService _courseService;
         private readonly IUserManagementService _userManagementService;
+        private readonly IImportExportService _importExportService;
+        private readonly IAdminViewService _adminViewService;
+        private readonly IAdminDataService _adminDataService;
 
         private record UserStatistics(int StudentCount, int LecturerCount, int AdminCount);
 
-        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache, ILogger<AdminController> logger, IDepartmentService departmentService, IMajorService majorService, ISemesterService semesterService, ISubjectService subjectService, ICourseService courseService, IUserManagementService userManagementService) : base(userManager)
+        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache, ILogger<AdminController> logger, IDepartmentService departmentService, IMajorService majorService, ISemesterService semesterService, ISubjectService subjectService, ICourseService courseService, IUserManagementService userManagementService, IImportExportService importExportService, IAdminViewService adminViewService, IAdminDataService adminDataService) : base(userManager)
         {
             _context = context;
             _cache = cache;
@@ -43,6 +46,9 @@ namespace SIMS.Controllers
             _subjectService = subjectService;
             _courseService = courseService;
             _userManagementService = userManagementService;
+            _importExportService = importExportService;
+            _adminViewService = adminViewService;
+            _adminDataService = adminDataService;
         }
 
         public IActionResult Index()
@@ -53,17 +59,15 @@ namespace SIMS.Controllers
         // Manage Departments
         public async Task<IActionResult> ManageDepartments(int page = 1, int pageSize = 10)
         {
-            var departments = await _departmentService.GetAllDepartmentsAsync();
-            var totalDepartments = departments.Count;
-            var pagedDepartments = departments.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var viewModel = await _adminViewService.GetManageDepartmentsDataAsync(page, pageSize);
 
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalDepartments / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "ManageDepartments";
             ViewBag.Controller = "Admin";
 
-            return View(pagedDepartments);
+            return View(viewModel.Departments);
         }
 
         [HttpPost]
@@ -111,18 +115,16 @@ namespace SIMS.Controllers
         // Manage Majors
         public async Task<IActionResult> ManageMajors(int page = 1, int pageSize = 10)
         {
-            var majors = await _majorService.GetAllMajorsAsync();
-            var totalMajors = majors.Count;
-            var pagedMajors = majors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var viewModel = await _adminViewService.GetManageMajorsDataAsync(page, pageSize);
 
-            ViewBag.Departments = await _departmentService.GetAllDepartmentsAsync();
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalMajors / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.Departments = viewModel.Departments;
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "ManageMajors";
             ViewBag.Controller = "Admin";
 
-            return View(pagedMajors);
+            return View(viewModel.Majors);
         }
 
         [HttpPost]
@@ -222,17 +224,15 @@ namespace SIMS.Controllers
         // Manage Semesters
         public async Task<IActionResult> ManageSemesters(int page = 1, int pageSize = 10)
         {
-            var semesters = await _semesterService.GetAllSemestersAsync();
-            var totalSemesters = semesters.Count;
-            var pagedSemesters = semesters.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var viewModel = await _adminViewService.GetManageSemestersDataAsync(page, pageSize);
 
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalSemesters / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "ManageSemesters";
             ViewBag.Controller = "Admin";
 
-            return View(pagedSemesters);
+            return View(viewModel.Semesters);
         }
 
         [HttpPost]
@@ -298,17 +298,15 @@ namespace SIMS.Controllers
         // Manage Subjects
         public async Task<IActionResult> ManageSubjects(int page = 1, int pageSize = 10)
         {
-            var subjects = await _subjectService.GetAllSubjectsAsync();
-            var totalSubjects = subjects.Count;
-            var pagedSubjects = subjects.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var viewModel = await _adminViewService.GetManageSubjectsDataAsync(page, pageSize);
 
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalSubjects / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "ManageSubjects";
             ViewBag.Controller = "Admin";
 
-            return View(pagedSubjects);
+            return View(viewModel.Subjects);
         }
 
         [HttpPost]
@@ -366,23 +364,20 @@ namespace SIMS.Controllers
         // Manage Courses
         public async Task<IActionResult> ManageCourses(int page = 1, int pageSize = 10)
         {
-            var courses = await _courseService.GetAllCoursesAsync();
+            var viewModel = await _adminViewService.GetManageCoursesDataAsync(page, pageSize);
 
-            var totalCourses = courses.Count;
-            var pagedCourses = courses.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-            
-            ViewBag.Subjects = await _subjectService.GetAllSubjectsAsync();
-            ViewBag.Semesters = await _semesterService.GetAllSemestersAsync();
-            ViewBag.Majors = await _majorService.GetAllMajorsAsync();
-            ViewBag.Lecturers = await _context.Lecturers.Include(l => l.User).ToListAsync();
+            ViewBag.Subjects = viewModel.Subjects;
+            ViewBag.Semesters = viewModel.Semesters;
+            ViewBag.Majors = viewModel.Majors;
+            ViewBag.Lecturers = viewModel.Lecturers;
 
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalCourses / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "ManageCourses";
             ViewBag.Controller = "Admin";
-            
-            return View(pagedCourses);
+
+            return View(viewModel.Courses);
         }
 
         [HttpPost]
@@ -543,257 +538,36 @@ namespace SIMS.Controllers
         // Manage Users
         public async Task<IActionResult> ManageUsers(int page = 1, int pageSize = 10)
         {
-            var users = await base._userManager.Users.ToListAsync();
-            var totalUsers = users.Count;
-            var pagedUsers = users.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            var viewModel = await _adminViewService.GetManageUsersDataAsync(page, pageSize);
 
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.Roles = viewModel.Roles;
+            ViewBag.Departments = viewModel.Departments;
+            ViewBag.Majors = viewModel.Majors;
+
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "ManageUsers";
             ViewBag.Controller = "Admin";
 
-            return View(pagedUsers);
+            return View(viewModel.Users);
         }
 
         [HttpPost]
         public async Task<IActionResult> ImportUsers(IFormFile file, bool skipDuplicates = true)
         {
-            if (file == null || file.Length == 0)
-            {
-                return Json(new { success = false, message = "Please select a file to import." });
-            }
-
-            var fileExtension = Path.GetExtension(file.FileName).ToLower();
-            if (fileExtension != ".csv" && fileExtension != ".xlsx" && fileExtension != ".xls")
-            {
-                return Json(new { success = false, message = "Only CSV and Excel files are supported." });
-            }
-
-            var users = new List<UserImportModel>();
-            var errors = new List<string>();
-
-            try
-            {
-                if (fileExtension == ".csv")
-                {
-                    users = await ParseCsvFile(file);
-                }
-                else
-                {
-                    users = await ParseExcelFile(file);
-                }
-
-                if (!users.Any())
-                {
-                    return Json(new { success = false, message = "No valid data found in the file." });
-                }
-
-                _logger.LogInformation($"Parsed {users.Count} users from file");
-
-                var importedCount = 0;
-                var skippedCount = 0;
-
-                // Get default major for students
-                var defaultMajor = await _context.Majors.FirstOrDefaultAsync();
-                if (defaultMajor == null)
-                {
-                    return Json(new { success = false, message = "No majors found in database. Please create at least one major before importing students." });
-                }
-                _logger.LogInformation($"Using default major: {defaultMajor.Name} (ID: {defaultMajor.MajorId})");
-
-                foreach (var userData in users)
-                {
-                    try
-                    {
-                        // Validate required fields
-                        if (string.IsNullOrWhiteSpace(userData.Name) || 
-                            string.IsNullOrWhiteSpace(userData.Email) || 
-                            string.IsNullOrWhiteSpace(userData.Password) || 
-                            string.IsNullOrWhiteSpace(userData.Role))
-                        {
-                            errors.Add($"Row {users.IndexOf(userData) + 2}: Missing required fields (Name, Email, Password, Role)");
-                            _logger.LogWarning($"Skipping user {userData.Email}: Missing required fields");
-                            continue;
-                        }
-
-                        // Check for duplicate email if skipDuplicates is true
-                        if (skipDuplicates)
-                        {
-                            var existingUser = await _userManager.FindByEmailAsync(userData.Email);
-                            if (existingUser != null)
-                            {
-                                skippedCount++;
-                                continue;
-                            }
-                        }
-
-                        // Validate role
-                        var validRoles = new[] { "admin", "lecturer", "student" };
-                        if (!validRoles.Contains(userData.Role.ToLower()))
-                        {
-                            errors.Add($"Row {users.IndexOf(userData) + 2}: Invalid role '{userData.Role}'. Must be Admin, Lecturer, or Student");
-                            _logger.LogWarning($"Skipping user {userData.Email}: Invalid role '{userData.Role}'");
-                            continue;
-                        }
-
-                        _logger.LogInformation($"Creating user: {userData.Email} with role {userData.Role}");
-
-                        // Create user
-                        var user = new User
-                        {
-                            UserName = userData.Email,
-                            Email = userData.Email,
-                            Name = userData.Name,
-                            Role = userData.Role,
-                            StudentCode = userData.StudentCode,
-                            DateOfBirth = userData.DateOfBirth,
-                            Phone = userData.Phone,
-                            Gender = userData.Gender,
-                            Address = userData.Address,
-                            EmailConfirmed = true
-                        };
-
-                        var result = await _userManager.CreateAsync(user, userData.Password);
-                        
-                        if (result.Succeeded)
-                        {
-                            await _userManager.AddToRoleAsync(user, userData.Role);
-                            
-                            // Create role-specific records
-                            switch (userData.Role.ToLower())
-                            {
-                                case "student":
-                                    var student = new Student { UserId = user.Id, MajorId = defaultMajor.MajorId };
-                                    _context.Students.Add(student);
-                                    _logger.LogInformation($"Created student record for {userData.Email}");
-                                    break;
-                                case "lecturer":
-                                    var lecturer = new Lecturer { UserId = user.Id };
-                                    _context.Lecturers.Add(lecturer);
-                                    _logger.LogInformation($"Created lecturer record for {userData.Email}");
-                                    break;
-                                case "admin":
-                                    var admin = new Admin { UserId = user.Id };
-                                    _context.Admins.Add(admin);
-                                    _logger.LogInformation($"Created admin record for {userData.Email}");
-                                    break;
-                            }
-                            
-                            await _context.SaveChangesAsync();
-                            importedCount++;
-                            _logger.LogInformation($"Successfully imported user: {userData.Email}");
-                        }
-                        else
-                        {
-                            var errorMsg = string.Join(", ", result.Errors.Select(e => e.Description));
-                            errors.Add($"Row {users.IndexOf(userData) + 2}: {errorMsg}");
-                            _logger.LogWarning($"Failed to create user {userData.Email}: {errorMsg}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Add($"Row {users.IndexOf(userData) + 2}: {ex.Message}");
-                    }
-                }
-
-                await InvalidateUserStatsCache();
-
-                var message = $"Imported {importedCount} users successfully.";
-                if (skippedCount > 0)
-                {
-                    message += $" Skipped {skippedCount} duplicate emails.";
-                }
-
-                return Json(new { 
-                    success = true, 
-                    message = message,
-                    importedCount = importedCount,
-                    skippedCount = skippedCount,
-                    errors = errors
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error importing users");
-                return Json(new { success = false, message = "Error processing file: " + ex.Message });
-            }
-        }
-
-        private async Task<List<UserImportModel>> ParseCsvFile(IFormFile file)
-        {
-            var users = new List<UserImportModel>();
+            var result = await _importExportService.ImportUsersAsync(file, skipDuplicates);
             
-            using var reader = new StreamReader(file.OpenReadStream());
-            var content = await reader.ReadToEndAsync();
-            _logger.LogInformation($"CSV Content length: {content.Length}");
-            
-            // Reset stream
-            file.OpenReadStream().Position = 0;
-            
-            using var reader2 = new StreamReader(file.OpenReadStream());
-            using var csv = new CsvReader(reader2, new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                HeaderValidated = null,
-                MissingFieldFound = null,
-                HasHeaderRecord = false // CSV file doesn't have header row
+            return Json(new { 
+                success = result.Success, 
+                message = result.Message,
+                importedCount = result.ImportedCount,
+                skippedCount = result.SkippedCount,
+                errors = result.Errors
             });
-            
-            await foreach (var record in csv.GetRecordsAsync<UserImportModel>())
-            {
-                users.Add(record);
-            }
-            
-            _logger.LogInformation($"Parsed {users.Count} records from CSV file");
-            return users;
         }
 
-        private async Task<List<UserImportModel>> ParseExcelFile(IFormFile file)
-        {
-            var users = new List<UserImportModel>();
-            
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            using var package = new ExcelPackage(file.OpenReadStream());
-            var worksheet = package.Workbook.Worksheets[0];
-            
-            // Skip header row
-            for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
-            {
-                var user = new UserImportModel
-                {
-                    Name = worksheet.Cells[row, 1].Text?.Trim(),
-                    Email = worksheet.Cells[row, 2].Text?.Trim(),
-                    Password = worksheet.Cells[row, 3].Text?.Trim(),
-                    Role = worksheet.Cells[row, 4].Text?.Trim(),
-                    StudentCode = worksheet.Cells[row, 5].Text?.Trim(),
-                    DateOfBirth = ParseDate(worksheet.Cells[row, 6].Text),
-                    Phone = worksheet.Cells[row, 7].Text?.Trim(),
-                    Gender = worksheet.Cells[row, 8].Text?.Trim(),
-                    Address = worksheet.Cells[row, 9].Text?.Trim()
-                };
-                
-                users.Add(user);
-            }
-            
-            return users;
-        }
 
-        private DateTime? ParseDate(string dateString)
-        {
-            if (string.IsNullOrWhiteSpace(dateString))
-                return null;
-                
-            if (DateTime.TryParse(dateString, out var date))
-                return date;
-                
-            return null;
-        }
-        
-        private async Task InvalidateUserStatsCache()
-        {
-            _cache.Remove(USER_STATS_CACHE_KEY);
-            await Task.CompletedTask;
-        }
 
         [HttpPost]
         public async Task<IActionResult> AddUser(string Name, string Email, string Password, string Role, 
@@ -801,63 +575,14 @@ namespace SIMS.Controllers
         {
             try
             {
-                var user = new User
-                {
-                    UserName = Email,
-                    Email = Email,
-                    Name = Name,
-                    Role = Role,
-                    StudentCode = StudentCode,
-                    DateOfBirth = DateOfBirth,
-                    Phone = Phone,
-                    Gender = Gender,
-                    Address = Address,
-                    EmailConfirmed = true
-                };
-
-                var result = await _userManager.CreateAsync(user, Password);
+                var result = await _userManagementService.AddUserAsync(Name, Email, Password, Role, StudentCode, DateOfBirth, Phone, Gender, Address);
                 
-                if (result.Succeeded)
+                if (result.success)
                 {
-                    await _userManager.AddToRoleAsync(user, Role);
-                    
-                    // Create role-specific records
-                    switch (Role.ToLower())
-                    {
-                        case "student":
-                            var student = new Student
-                            {
-                                UserId = user.Id,
-                                MajorId = 1 // Default major
-                            };
-                            _context.Students.Add(student);
-                            break;
-                        case "lecturer":
-                            var lecturer = new Lecturer
-                            {
-                                UserId = user.Id,
-                                DepartmentId = 1 // Default department
-                            };
-                            _context.Lecturers.Add(lecturer);
-                            break;
-                        case "admin":
-                            var admin = new Admin
-                            {
-                                UserId = user.Id
-                            };
-                            _context.Admins.Add(admin);
-                            break;
-                    }
-                    
-                    await _context.SaveChangesAsync();
-                    
-                    // Invalidate cache after adding user
-                    await InvalidateUserStatsCache();
-                    
                     return Json(new { success = true });
                 }
                 
-                return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+                return Json(new { success = false, message = result.message });
             }
             catch (Exception ex)
             {
@@ -868,23 +593,11 @@ namespace SIMS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetUser(string id)
         {
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
+            var data = await _adminDataService.GetUserDataAsync(id);
+            if (data == null)
                 return Json(new { success = false });
 
-            return Json(new
-            {
-                id = user.Id,
-                name = user.Name,
-                email = user.Email,
-                role = user.Role,
-                studentCode = user.StudentCode,
-                dateOfBirth = user.DateOfBirth,
-                phone = user.Phone,
-                gender = user.Gender,
-                address = user.Address,
-                avatar = user.Avatar
-            });
+            return Json(data);
         }
 
         [HttpPost]
@@ -893,51 +606,14 @@ namespace SIMS.Controllers
         {
             try
             {
-                var user = await _userManager.FindByIdAsync(Id);
-                if (user == null)
-                    return Json(new { success = false, message = "User not found" });
-
-                user.Name = Name;
-                user.Role = Role;
-                user.StudentCode = StudentCode;
-                user.DateOfBirth = DateOfBirth;
-                user.Phone = Phone;
-                user.Gender = Gender;
-                user.Address = Address;
+                var result = await _userManagementService.UpdateUserAsync(Id, Name, Role, StudentCode, DateOfBirth, Phone, Gender, Address, Password, Avatar);
                 
-                // Update avatar if provided
-                if (!string.IsNullOrEmpty(Avatar))
+                if (result.success)
                 {
-                    user.Avatar = Avatar;
-                }
-
-                // Update password if provided
-                if (!string.IsNullOrEmpty(Password))
-                {
-                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-                    var passwordResult = await _userManager.ResetPasswordAsync(user, token, Password);
-                    if (!passwordResult.Succeeded)
-                    {
-                        return Json(new { success = false, message = string.Join(", ", passwordResult.Errors.Select(e => e.Description)) });
-                    }
-                }
-
-                var result = await _userManager.UpdateAsync(user);
-                
-                if (result.Succeeded)
-                {
-                    // Update role
-                    var currentRoles = await _userManager.GetRolesAsync(user);
-                    await _userManager.RemoveFromRolesAsync(user, currentRoles);
-                    await _userManager.AddToRoleAsync(user, Role);
-                    
-                    // Invalidate cache after updating user
-                    await InvalidateUserStatsCache();
-                    
                     return Json(new { success = true });
                 }
                 
-                return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+                return Json(new { success = false, message = result.message });
             }
             catch (Exception ex)
             {
@@ -948,113 +624,59 @@ namespace SIMS.Controllers
         // Get actions for edit modals
         public async Task<IActionResult> GetCourse(int id)
         {
-            var course = await _context.Courses
-                .Include(c => c.Subject)
-                .Include(c => c.Semester)
-                .Include(c => c.Major)
-                .Include(c => c.Lecturer)
-                .FirstOrDefaultAsync(c => c.CourseId == id);
-            
-            if (course == null)
+            var data = await _adminDataService.GetCourseDataAsync(id);
+            if (data == null)
                 return Json(new { success = false });
 
-            return Json(new
-            {
-                courseId = course.CourseId,
-                courseName = course.CourseName,
-                subjectId = course.SubjectId,
-                semesterId = course.SemesterId,
-                majorId = course.MajorId,
-                lecturerId = course.LecturerId
-            });
+            return Json(data);
         }
 
         public async Task<IActionResult> GetSubject(int id)
         {
-            var subject = await _context.Subjects.FindAsync(id);
-            if (subject == null)
+            var data = await _adminDataService.GetSubjectDataAsync(id);
+            if (data == null)
                 return Json(new { success = false });
 
-            return Json(new
-            {
-                subjectId = subject.SubjectId,
-                code = subject.Code,
-                name = subject.Name
-            });
+            return Json(data);
         }
 
         public async Task<IActionResult> GetDepartment(int id)
         {
-            var department = await _context.Departments.FindAsync(id);
-            if (department == null)
+            var data = await _adminDataService.GetDepartmentDataAsync(id);
+            if (data == null)
                 return Json(new { success = false });
 
-            return Json(new
-            {
-                departmentId = department.DepartmentId,
-                name = department.Name
-            });
+            return Json(data);
         }
 
         public async Task<IActionResult> GetMajor(int id)
         {
-            var major = await _context.Majors
-                .Include(m => m.Department)
-                .FirstOrDefaultAsync(m => m.MajorId == id);
-            
-            if (major == null)
+            var data = await _adminDataService.GetMajorDataAsync(id);
+            if (data == null)
                 return Json(new { success = false });
 
-            return Json(new
-            {
-                majorId = major.MajorId,
-                name = major.Name,
-                departmentId = major.DepartmentId
-            });
+            return Json(data);
         }
 
         public async Task<IActionResult> GetSemester(int id)
         {
-            var semester = await _context.Semesters.FindAsync(id);
-            if (semester == null)
+            var data = await _adminDataService.GetSemesterDataAsync(id);
+            if (data == null)
                 return Json(new { success = false });
 
-            return Json(new
-            {
-                semesterId = semester.SemesterId,
-                name = semester.Name,
-                startDate = semester.StartDate.ToString("yyyy-MM-dd"),
-                endDate = semester.EndDate.ToString("yyyy-MM-dd")
-            });
+            return Json(data);
         }
 
         public async Task<IActionResult> GetStudentCourse(int studentId, int courseId)
         {
-            var studentCourse = await _context.StudentCourses
-                .Include(sc => sc.Student)
-                .ThenInclude(s => s.User)
-                .Include(sc => sc.Course)
-                .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
-
-            if (studentCourse == null)
+            var data = await _adminDataService.GetStudentCourseDataAsync(studentId, courseId);
+            if (data == null)
             {
                 _logger.LogWarning($"StudentCourse not found for studentId: {studentId}, courseId: {courseId}");
                 return Json(new { success = false });
             }
 
-            var studentName = studentCourse.Student?.User?.Name ?? "Unknown Student";
-            var courseName = studentCourse.Course?.CourseName ?? "Unknown Course";
-
-            _logger.LogInformation($"Found StudentCourse: studentId={studentId}, courseId={courseId}, studentName={studentName}, courseName={courseName}");
-
-            return Json(new
-            {
-                success = true,
-                studentId = studentCourse.StudentId,
-                courseId = studentCourse.CourseId,
-                studentName = studentName,
-                courseName = courseName
-            });
+            return Json(data);
         }
 
         [HttpPost]
@@ -1062,50 +684,14 @@ namespace SIMS.Controllers
         {
             try
             {
-                var user = await _userManager.FindByIdAsync(id);
-                if (user == null)
-                    return Json(new { success = false, message = "User not found" });
-
-                // Delete role-specific records first
-                switch (user.Role.ToLower())
+                var result = await _userManagementService.DeleteUserAsync(id);
+                
+                if (result.success)
                 {
-                    case "student":
-                        var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == id);
-                        if (student != null)
-                        {
-                            // Remove student course assignments
-                            var studentCourses = await _context.StudentCourses
-                                .Where(sc => sc.StudentId == student.StudentId)
-                                .ToListAsync();
-                            _context.StudentCourses.RemoveRange(studentCourses);
-                            
-                            _context.Students.Remove(student);
-                        }
-                        break;
-                    case "lecturer":
-                        var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == id);
-                        if (lecturer != null)
-                            _context.Lecturers.Remove(lecturer);
-                        break;
-                    case "admin":
-                        var admin = await _context.Admins.FirstOrDefaultAsync(a => a.UserId == id);
-                        if (admin != null)
-                            _context.Admins.Remove(admin);
-                        break;
-                }
-                
-                await _context.SaveChangesAsync();
-                
-                var result = await _userManager.DeleteAsync(user);
-                
-                if (result.Succeeded)
-                {
-                    // Invalidate cache after deleting user
-                    await InvalidateUserStatsCache();
                     return Json(new { success = true });
                 }
                     
-                return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
+                return Json(new { success = false, message = result.message });
             }
             catch (Exception ex)
             {
@@ -1116,32 +702,18 @@ namespace SIMS.Controllers
         // Assign Students to Courses
         public async Task<IActionResult> AssignStudentToCourse(int page = 1, int pageSize = 10)
         {
-            ViewBag.Students = await _context.Students
-                .Include(s => s.User)
-                .Include(s => s.Major)
-                .ToListAsync();
-            ViewBag.Courses = await _context.Courses
-                .Include(c => c.Subject)
-                .Include(c => c.Major)
-                .ToListAsync();
+            var viewModel = await _adminViewService.GetAssignStudentToCourseDataAsync(page, pageSize);
 
-            var assignments = await _context.StudentCourses
-                .Include(sc => sc.Student)
-                .ThenInclude(s => s.User)
-                .Include(sc => sc.Course)
-                .ThenInclude(c => c.Subject)
-                .ToListAsync();
+            ViewBag.Students = viewModel.Students;
+            ViewBag.Courses = viewModel.Courses;
 
-            var totalAssignments = assignments.Count;
-            var pagedAssignments = assignments.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalAssignments / pageSize);
-            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentPage = viewModel.CurrentPage;
+            ViewBag.TotalPages = viewModel.TotalPages;
+            ViewBag.PageSize = viewModel.PageSize;
             ViewBag.Action = "AssignStudentToCourse";
             ViewBag.Controller = "Admin";
 
-            return View(pagedAssignments);
+            return View(viewModel.Assignments);
         }
 
         [HttpPost]
@@ -1193,14 +765,14 @@ namespace SIMS.Controllers
         {
             try
             {
-                var (success, message, data) = await _userManagementService.GetCourseStudentsAsync(courseId);
-                if (success && data != null)
+                var data = await _adminDataService.GetCourseStudentsDataAsync(courseId);
+                if (data != null)
                 {
                     return Json(data);
                 }
                 else
                 {
-                    return Json(new { success, message });
+                    return Json(new { success = false, message = "Course not found" });
                 }
             }
             catch (Exception ex)
@@ -1208,27 +780,5 @@ namespace SIMS.Controllers
                 return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
-    }
-
-    public class UserImportModel
-    {
-        [CsvHelper.Configuration.Attributes.Index(0)]
-        public string? Name { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(1)]
-        public string? Email { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(2)]
-        public string? Password { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(3)]
-        public string? Role { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(4)]
-        public string? StudentCode { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(5)]
-        public DateTime? DateOfBirth { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(6)]
-        public string? Phone { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(7)]
-        public string? Gender { get; set; }
-        [CsvHelper.Configuration.Attributes.Index(8)]
-        public string? Address { get; set; }
     }
 }

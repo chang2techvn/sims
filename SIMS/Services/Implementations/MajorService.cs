@@ -59,5 +59,12 @@ namespace SIMS.Services.Implementations
             _context.Majors.Remove(major);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<Major?> GetMajorAsync(int id)
+        {
+            return await _context.Majors
+                .Include(m => m.Department)
+                .FirstOrDefaultAsync(m => m.MajorId == id);
+        }
     }
 }

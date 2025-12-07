@@ -47,5 +47,10 @@ namespace SIMS.Services.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Semester?> GetSemesterAsync(int id)
+        {
+            return await _context.Semesters.FindAsync(id);
+        }
     }
 }

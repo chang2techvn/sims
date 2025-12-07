@@ -46,5 +46,10 @@ namespace SIMS.Services.Implementations
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Subject?> GetSubjectAsync(int id)
+        {
+            return await _context.Subjects.FindAsync(id);
+        }
     }
 }
