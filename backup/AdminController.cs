@@ -11,7 +11,6 @@ using CsvHelper.Configuration;
 using CsvHelper.Configuration.Attributes;
 using OfficeOpenXml;
 using System.Globalization;
-using SIMS.Services.Interfaces;
 
 namespace SIMS.Controllers
 {
@@ -23,26 +22,14 @@ namespace SIMS.Controllers
         private readonly ILogger<AdminController> _logger;
         private const string USER_STATS_CACHE_KEY = "UserStatistics";
         private readonly TimeSpan CACHE_DURATION = TimeSpan.FromHours(1);
-        private readonly IDepartmentService _departmentService;
-        private readonly IMajorService _majorService;
-        private readonly ISemesterService _semesterService;
-        private readonly ISubjectService _subjectService;
-        private readonly ICourseService _courseService;
-        private readonly IUserManagementService _userManagementService;
 
         private record UserStatistics(int StudentCount, int LecturerCount, int AdminCount);
 
-        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache, ILogger<AdminController> logger, IDepartmentService departmentService, IMajorService majorService, ISemesterService semesterService, ISubjectService subjectService, ICourseService courseService, IUserManagementService userManagementService) : base(userManager)
+        public AdminController(ApplicationDbContext context, UserManager<User> userManager, IMemoryCache cache, ILogger<AdminController> logger) : base(userManager)
         {
             _context = context;
             _cache = cache;
             _logger = logger;
-            _departmentService = departmentService;
-            _majorService = majorService;
-            _semesterService = semesterService;
-            _subjectService = subjectService;
-            _courseService = courseService;
-            _userManagementService = userManagementService;
         }
 
         public IActionResult Index()
@@ -53,7 +40,7 @@ namespace SIMS.Controllers
         // Manage Departments
         public async Task<IActionResult> ManageDepartments(int page = 1, int pageSize = 10)
         {
-            var departments = await _departmentService.GetAllDepartmentsAsync();
+            var departments = await _context.Departments.ToListAsync();
             var totalDepartments = departments.Count;
             var pagedDepartments = departments.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
@@ -72,7 +59,9 @@ namespace SIMS.Controllers
         {
             try
             {
-                await _departmentService.CreateDepartmentAsync(name);
+                var department = new Department { Name = name };
+                _context.Departments.Add(department);
+                await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Department created successfully!" });
             }
             catch (Exception ex)
@@ -84,13 +73,14 @@ namespace SIMS.Controllers
         [HttpPost]
         public async Task<IActionResult> EditDepartment(int id, string name)
         {
-            var department = await _departmentService.GetDepartmentByIdAsync(id);
+            var department = await _context.Departments.FindAsync(id);
             if (department == null)
             {
                 return NotFound();
             }
 
-            await _departmentService.UpdateDepartmentAsync(id, name);
+            department.Name = name;
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageDepartments");
         }
 
@@ -99,7 +89,15 @@ namespace SIMS.Controllers
         {
             try
             {
-                await _departmentService.DeleteDepartmentAsync(id);
+                var department = await _context.Departments.FindAsync(id);
+                if (department == null)
+                {
+                    return Json(new { success = false, message = "Department not found" });
+                }
+
+                _context.Departments.Remove(department);
+                await _context.SaveChangesAsync();
+
                 return Json(new { success = true, message = "Department deleted successfully" });
             }
             catch (Exception ex)
@@ -111,11 +109,11 @@ namespace SIMS.Controllers
         // Manage Majors
         public async Task<IActionResult> ManageMajors(int page = 1, int pageSize = 10)
         {
-            var majors = await _majorService.GetAllMajorsAsync();
+            var majors = await _context.Majors.Include(m => m.Department).ToListAsync();
             var totalMajors = majors.Count;
             var pagedMajors = majors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
-            ViewBag.Departments = await _departmentService.GetAllDepartmentsAsync();
+            ViewBag.Departments = await _context.Departments.ToListAsync();
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalMajors / pageSize);
             ViewBag.PageSize = pageSize;
@@ -130,7 +128,8 @@ namespace SIMS.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _majorService.CreateMajorAsync(major.Name, major.DepartmentId);
+                _context.Majors.Add(major);
+                await _context.SaveChangesAsync();
                 return RedirectToAction("ManageMajors");
             }
             return RedirectToAction("ManageMajors");
@@ -148,11 +147,22 @@ namespace SIMS.Controllers
                     return Json(new { success = false, message = "Invalid data provided." });
                 }
 
-                await _majorService.CreateMajorAsync(Name, DepartmentId);
+                var department = await _context.Departments.FindAsync(DepartmentId);
+                if (department == null)
+                {
+                    return Json(new { success = false, message = "Department not found." });
+                }
 
-                var major = await _context.Majors.FirstOrDefaultAsync(m => m.Name == Name.Trim() && m.DepartmentId == DepartmentId);
+                var major = new Major
+                {
+                    Name = Name.Trim(),
+                    DepartmentId = DepartmentId
+                };
 
-                return Json(new { success = true, message = "Major created successfully!", majorId = major?.MajorId });
+                _context.Majors.Add(major);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Major created successfully!", majorId = major.MajorId });
             }
             catch (Exception ex)
             {
@@ -173,9 +183,22 @@ namespace SIMS.Controllers
                     return Json(new { success = false, message = "Invalid data provided." });
                 }
 
-                await _majorService.UpdateMajorAsync(MajorId, Name, DepartmentId);
-
                 var major = await _context.Majors.Include(m => m.Department).FirstOrDefaultAsync(m => m.MajorId == MajorId);
+                if (major == null)
+                {
+                    return Json(new { success = false, message = "Major not found." });
+                }
+
+                var department = await _context.Departments.FindAsync(DepartmentId);
+                if (department == null)
+                {
+                    return Json(new { success = false, message = "Department not found." });
+                }
+
+                major.Name = Name.Trim();
+                major.DepartmentId = DepartmentId;
+
+                await _context.SaveChangesAsync();
 
                 return Json(new
                 {
@@ -183,9 +206,9 @@ namespace SIMS.Controllers
                     message = "Major updated successfully!",
                     major = new
                     {
-                        majorId = major?.MajorId,
-                        name = major?.Name,
-                        departmentName = major?.Department.Name
+                        majorId = major.MajorId,
+                        name = major.Name,
+                        departmentName = major.Department.Name
                     }
                 });
             }
@@ -208,7 +231,24 @@ namespace SIMS.Controllers
                     return Json(new { success = false, message = "Invalid major ID." });
                 }
 
-                await _majorService.DeleteMajorAsync(MajorId);
+                var major = await _context.Majors
+                    .Include(m => m.Students)
+                    .Include(m => m.Courses)
+                    .FirstOrDefaultAsync(m => m.MajorId == MajorId);
+
+                if (major == null)
+                {
+                    return Json(new { success = false, message = "Major not found." });
+                }
+
+                // Check if major has students or courses
+                if (major.Students.Any() || major.Courses.Any())
+                {
+                    return Json(new { success = false, message = "Cannot delete major that has students or courses assigned." });
+                }
+
+                _context.Majors.Remove(major);
+                await _context.SaveChangesAsync();
 
                 return Json(new { success = true, message = "Major deleted successfully!" });
             }
@@ -222,7 +262,7 @@ namespace SIMS.Controllers
         // Manage Semesters
         public async Task<IActionResult> ManageSemesters(int page = 1, int pageSize = 10)
         {
-            var semesters = await _semesterService.GetAllSemestersAsync();
+            var semesters = await _context.Semesters.ToListAsync();
             var totalSemesters = semesters.Count;
             var pagedSemesters = semesters.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
@@ -242,7 +282,9 @@ namespace SIMS.Controllers
             try
             {
                 Console.WriteLine($"CreateSemesterAjax called with name: {name}, startDate: {startDate}, endDate: {endDate}");
-                await _semesterService.CreateSemesterAsync(name, startDate, endDate);
+                var semester = new Semester { Name = name, StartDate = startDate, EndDate = endDate };
+                _context.Semesters.Add(semester);
+                await _context.SaveChangesAsync();
                 Console.WriteLine("Semester created successfully");
                 return Json(new { success = true, message = "Semester created successfully!" });
             }
@@ -262,7 +304,10 @@ namespace SIMS.Controllers
                 return NotFound();
             }
 
-            await _semesterService.UpdateSemesterAsync(id, name, startDate, endDate);
+            semester.Name = name;
+            semester.StartDate = startDate;
+            semester.EndDate = endDate;
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageSemesters");
         }
 
@@ -272,7 +317,16 @@ namespace SIMS.Controllers
         {
             try
             {
-                await _semesterService.UpdateSemesterAsync(id, name, startDate, endDate);
+                var semester = await _context.Semesters.FindAsync(id);
+                if (semester == null)
+                {
+                    return Json(new { success = false, message = "Semester not found." });
+                }
+
+                semester.Name = name;
+                semester.StartDate = startDate;
+                semester.EndDate = endDate;
+                await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Semester updated successfully!" });
             }
             catch (Exception ex)
@@ -286,7 +340,15 @@ namespace SIMS.Controllers
         {
             try
             {
-                await _semesterService.DeleteSemesterAsync(id);
+                var semester = await _context.Semesters.FindAsync(id);
+                if (semester == null)
+                {
+                    return Json(new { success = false, message = "Semester not found" });
+                }
+
+                _context.Semesters.Remove(semester);
+                await _context.SaveChangesAsync();
+
                 return Json(new { success = true, message = "Semester deleted successfully" });
             }
             catch (Exception ex)
@@ -298,7 +360,7 @@ namespace SIMS.Controllers
         // Manage Subjects
         public async Task<IActionResult> ManageSubjects(int page = 1, int pageSize = 10)
         {
-            var subjects = await _subjectService.GetAllSubjectsAsync();
+            var subjects = await _context.Subjects.ToListAsync();
             var totalSubjects = subjects.Count;
             var pagedSubjects = subjects.Skip((page - 1) * pageSize).Take(pageSize).ToList();
 
@@ -316,7 +378,8 @@ namespace SIMS.Controllers
         {
             if (ModelState.IsValid)
             {
-                await _subjectService.CreateSubjectAsync(subject.Name, subject.Code);
+                _context.Subjects.Add(subject);
+                await _context.SaveChangesAsync();
                 return RedirectToAction("ManageSubjects");
             }
             return RedirectToAction("ManageSubjects");
@@ -331,7 +394,9 @@ namespace SIMS.Controllers
                 return NotFound();
             }
 
-            await _subjectService.UpdateSubjectAsync(id, name, code);
+            subject.Code = code;
+            subject.Name = name;
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageSubjects");
         }
 
@@ -344,7 +409,8 @@ namespace SIMS.Controllers
                 return NotFound();
             }
 
-            await _subjectService.DeleteSubjectAsync(id);
+            _context.Subjects.Remove(subject);
+            await _context.SaveChangesAsync();
             return RedirectToAction("ManageSubjects");
         }
 
@@ -354,7 +420,15 @@ namespace SIMS.Controllers
         {
             try
             {
-                await _subjectService.DeleteSubjectAsync(id);
+                var subject = await _context.Subjects.FindAsync(id);
+                if (subject == null)
+                {
+                    return Json(new { success = false, message = "Subject not found." });
+                }
+
+                _context.Subjects.Remove(subject);
+                await _context.SaveChangesAsync();
+
                 return Json(new { success = true, message = "Subject deleted successfully!" });
             }
             catch (Exception ex)
@@ -366,14 +440,20 @@ namespace SIMS.Controllers
         // Manage Courses
         public async Task<IActionResult> ManageCourses(int page = 1, int pageSize = 10)
         {
-            var courses = await _courseService.GetAllCoursesAsync();
+            var courses = await _context.Courses
+                .Include(c => c.Subject)
+                .Include(c => c.Semester)
+                .Include(c => c.Major)
+                .Include(c => c.Lecturer)
+                .ThenInclude(l => l.User)
+                .ToListAsync();
 
             var totalCourses = courses.Count;
             var pagedCourses = courses.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             
-            ViewBag.Subjects = await _subjectService.GetAllSubjectsAsync();
-            ViewBag.Semesters = await _semesterService.GetAllSemestersAsync();
-            ViewBag.Majors = await _majorService.GetAllMajorsAsync();
+            ViewBag.Subjects = await _context.Subjects.ToListAsync();
+            ViewBag.Semesters = await _context.Semesters.ToListAsync();
+            ViewBag.Majors = await _context.Majors.ToListAsync();
             ViewBag.Lecturers = await _context.Lecturers.Include(l => l.User).ToListAsync();
 
             ViewBag.CurrentPage = page;
@@ -424,7 +504,8 @@ namespace SIMS.Controllers
                     LecturerId = LecturerId
                 };
 
-                await _courseService.CreateCourseAsync(course);
+                _context.Courses.Add(course);
+                await _context.SaveChangesAsync();
 
                 // Reload the course with navigation properties
                 var newCourse = await _context.Courses
@@ -494,7 +575,7 @@ namespace SIMS.Controllers
                 course.MajorId = MajorId;
                 course.LecturerId = LecturerId;
 
-                await _courseService.UpdateCourseAsync(CourseId, course);
+                await _context.SaveChangesAsync();
 
                 // Reload with navigation properties
                 var updatedCourse = await _context.Courses
@@ -531,7 +612,15 @@ namespace SIMS.Controllers
         {
             try
             {
-                await _courseService.DeleteCourseAsync(id);
+                var course = await _context.Courses.FindAsync(id);
+                if (course == null)
+                {
+                    return Json(new { success = false, message = "Course not found" });
+                }
+
+                _context.Courses.Remove(course);
+                await _context.SaveChangesAsync();
+
                 return Json(new { success = true, message = "Course deleted successfully" });
             }
             catch (Exception ex)
@@ -1150,8 +1239,25 @@ namespace SIMS.Controllers
         {
             try
             {
-                var (success, message) = await _userManagementService.AssignStudentToCourseAsync(studentId, courseId);
-                return Json(new { success, message });
+                var existing = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
+                
+                if (existing == null)
+                {
+                    var studentCourse = new StudentCourse
+                    {
+                        StudentId = studentId,
+                        CourseId = courseId
+                    };
+                    
+                    _context.StudentCourses.Add(studentCourse);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Student assigned to course successfully!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Student is already assigned to this course." });
+                }
             }
             catch (Exception ex)
             {
@@ -1165,8 +1271,19 @@ namespace SIMS.Controllers
         {
             try
             {
-                var (success, message) = await _userManagementService.RemoveStudentFromCourseAsync(studentId, courseId);
-                return Json(new { success, message });
+                var studentCourse = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
+                
+                if (studentCourse != null)
+                {
+                    _context.StudentCourses.Remove(studentCourse);
+                    await _context.SaveChangesAsync();
+                    return Json(new { success = true, message = "Student removed from course successfully!" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Assignment not found." });
+                }
             }
             catch (Exception ex)
             {
@@ -1174,12 +1291,48 @@ namespace SIMS.Controllers
             }
         }
 
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> UpdateStudentCourseAssignment(int currentStudentId, int currentCourseId, int newStudentId, int newCourseId)
         {
             try
             {
-                var (success, message) = await _userManagementService.UpdateStudentCourseAssignmentAsync(currentStudentId, currentCourseId, newStudentId, newCourseId);
-                return Json(new { success, message });
+                // Check if the new assignment already exists
+                var existingNew = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == newStudentId && sc.CourseId == newCourseId);
+
+                if (existingNew != null && (currentStudentId != newStudentId || currentCourseId != newCourseId))
+                {
+                    return Json(new { success = false, message = "Student is already assigned to this course." });
+                }
+
+                // If it's the same assignment, no need to update
+                if (currentStudentId == newStudentId && currentCourseId == newCourseId)
+                {
+                    return Json(new { success = true, message = "Assignment updated successfully!" });
+                }
+
+                // Remove the current assignment
+                var currentAssignment = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == currentStudentId && sc.CourseId == currentCourseId);
+
+                if (currentAssignment != null)
+                {
+                    _context.StudentCourses.Remove(currentAssignment);
+                }
+
+                // Create new assignment
+                var newAssignment = new StudentCourse
+                {
+                    StudentId = newStudentId,
+                    CourseId = newCourseId,
+                    EnrollmentDate = DateTime.Now
+                };
+
+                _context.StudentCourses.Add(newAssignment);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Student course assignment updated successfully!" });
             }
             catch (Exception ex)
             {
@@ -1193,15 +1346,37 @@ namespace SIMS.Controllers
         {
             try
             {
-                var (success, message, data) = await _userManagementService.GetCourseStudentsAsync(courseId);
-                if (success && data != null)
+                var course = await _context.Courses
+                    .Include(c => c.Subject)
+                    .Include(c => c.Semester)
+                    .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+                if (course == null)
                 {
-                    return Json(data);
+                    return Json(new { success = false, message = "Course not found." });
                 }
-                else
+
+                var students = await _context.StudentCourses
+                    .Where(sc => sc.CourseId == courseId)
+                    .Include(sc => sc.Student)
+                    .ThenInclude(s => s.User)
+                    .Select(sc => new
+                    {
+                        studentId = sc.Student.StudentId,
+                        name = sc.Student.User.Name,
+                        email = sc.Student.User.Email,
+                        avatar = sc.Student.User.Avatar
+                    })
+                    .ToListAsync();
+
+                return Json(new
                 {
-                    return Json(new { success, message });
-                }
+                    success = true,
+                    courseName = course.CourseName,
+                    subjectName = course.Subject.Name,
+                    semesterName = $"{course.Semester.Name} ({course.Semester.StartDate:MMM dd, yyyy} - {course.Semester.EndDate:MMM dd, yyyy})",
+                    students = students
+                });
             }
             catch (Exception ex)
             {

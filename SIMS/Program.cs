@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using SIMS.Data;
 using SIMS.Models;
+using SIMS.Services;
+using SIMS.Services.Interfaces;
+using SIMS.Services.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +50,15 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(typeof(Program));
+
+// Register custom services
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IDepartmentService, DepartmentService>();
+builder.Services.AddScoped<IMajorService, MajorService>();
+builder.Services.AddScoped<ISemesterService, SemesterService>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
 
 var app = builder.Build();
 
