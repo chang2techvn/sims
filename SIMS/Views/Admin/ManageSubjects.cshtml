@@ -31,7 +31,7 @@
                                 @{ int counter = 1; }
                                 @foreach (var subject in Model)
                                 {
-                                    <tr data-subject-id="@subject.SubjectId">
+                                    <tr style="cursor: pointer;" onclick="editSubject(@subject.SubjectId)" data-subject-id="@subject.SubjectId">
                                         <td>@counter</td>
                                         <td>
                                             <span class="badge bg-primary">@subject.Code</span>
@@ -39,8 +39,8 @@
                                         <td>
                                             <strong>@subject.Name</strong>
                                         </td>
-                                        <td>
-                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit" onclick="editSubject(@subject.SubjectId, '@subject.Code', '@subject.Name')">
+                                        <td onclick="event.stopPropagation()">
+                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit" onclick="editSubject(@subject.SubjectId)">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-link text-danger p-0" title="Delete" onclick="deleteSubject(@subject.SubjectId, '@subject.Name')">
@@ -195,11 +195,21 @@
             });
         }
 
-        function editSubject(id, code, name) {
-            document.getElementById('editSubjectId').value = id;
-            document.getElementById('editSubjectCode').value = code;
-            document.getElementById('editSubjectName').value = name;
-            new bootstrap.Modal(document.getElementById('editSubjectModal')).show();
+        function editSubject(subjectId) {
+            $.ajax({
+                url: '@Url.Action("GetSubject", "Admin")',
+                type: 'GET',
+                data: { id: subjectId },
+                success: function(subject) {
+                    document.getElementById('editSubjectId').value = subject.subjectId;
+                    document.getElementById('editSubjectCode').value = subject.code;
+                    document.getElementById('editSubjectName').value = subject.name;
+                    new bootstrap.Modal(document.getElementById('editSubjectModal')).show();
+                },
+                error: function() {
+                    showToast('Error loading subject data.', 'danger');
+                }
+            });
         }
 
         function deleteSubject(id, name) {

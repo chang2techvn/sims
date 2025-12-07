@@ -124,16 +124,19 @@
             <div class="main-content">
                 <header class="header">
                     <div class="header-content">
+                        <button class="sidebar-toggle d-lg-none" onclick="toggleSidebar()">
+                            <i class="fas fa-bars"></i>
+                        </button>
                         <div class="header-title">
                             <h1>@ViewData["Title"]</h1>
                         </div>
                         <div class="header-actions">
                             <div class="user-info">
-                                <div class="notifications">
+                                <div class="notifications d-none d-md-block">
                                     <i class="fas fa-bell"></i>
                                     <span class="notification-badge">3</span>
                                 </div>
-                                <div class="separator"></div>
+                                <div class="separator d-none d-md-block"></div>
                                 <a href="@Url.Action("Profile", "Account")" class="user-avatar-link">
                                     <div class="user-avatar">
                                         @if (!string.IsNullOrEmpty(ViewBag.UserAvatar))
@@ -146,7 +149,7 @@
                                         }
                                     </div>
                                 </a>
-                                <div class="user-details">
+                                <div class="user-details d-none d-lg-block">
                                     <h6>@User.Identity.Name</h6>
                                     <small>@ViewBag.UserRole</small>
                                 </div>

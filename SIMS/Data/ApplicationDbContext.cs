@@ -113,8 +113,8 @@ namespace SIMS.Data
             );
 
             builder.Entity<Semester>().HasData(
-                new Semester { SemesterId = 1, Name = "Fall", Year = "2024" },
-                new Semester { SemesterId = 2, Name = "Spring", Year = "2025" }
+                new Semester { SemesterId = 1, Name = "Fall", StartDate = new DateTime(2024, 9, 1), EndDate = new DateTime(2024, 12, 31) },
+                new Semester { SemesterId = 2, Name = "Spring", StartDate = new DateTime(2025, 1, 15), EndDate = new DateTime(2025, 5, 30) }
             );
 
             builder.Entity<Subject>().HasData(

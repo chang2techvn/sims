@@ -277,12 +277,12 @@ namespace SIMS.Controllers
 
         [HttpPost]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> CreateSemesterAjax(string name, string year)
+        public async Task<IActionResult> CreateSemesterAjax(string name, DateTime startDate, DateTime endDate)
         {
             try
             {
-                Console.WriteLine($"CreateSemesterAjax called with name: {name}, year: {year}");
-                var semester = new Semester { Name = name, Year = year };
+                Console.WriteLine($"CreateSemesterAjax called with name: {name}, startDate: {startDate}, endDate: {endDate}");
+                var semester = new Semester { Name = name, StartDate = startDate, EndDate = endDate };
                 _context.Semesters.Add(semester);
                 await _context.SaveChangesAsync();
                 Console.WriteLine("Semester created successfully");
@@ -296,7 +296,7 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditSemester(int id, string name, string year)
+        public async Task<IActionResult> EditSemester(int id, string name, DateTime startDate, DateTime endDate)
         {
             var semester = await _context.Semesters.FindAsync(id);
             if (semester == null)
@@ -305,14 +305,15 @@ namespace SIMS.Controllers
             }
 
             semester.Name = name;
-            semester.Year = year;
+            semester.StartDate = startDate;
+            semester.EndDate = endDate;
             await _context.SaveChangesAsync();
             return RedirectToAction("ManageSemesters");
         }
 
         [HttpPost]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> EditSemesterAjax(int id, string name, string year)
+        public async Task<IActionResult> EditSemesterAjax(int id, string name, DateTime startDate, DateTime endDate)
         {
             try
             {
@@ -323,7 +324,8 @@ namespace SIMS.Controllers
                 }
 
                 semester.Name = name;
-                semester.Year = year;
+                semester.StartDate = startDate;
+                semester.EndDate = endDate;
                 await _context.SaveChangesAsync();
                 return Json(new { success = true, message = "Semester updated successfully!" });
             }
@@ -523,7 +525,7 @@ namespace SIMS.Controllers
                         subjectName = newCourse?.Subject?.Name,
                         subjectCode = newCourse?.Subject?.Code,
                         semesterName = newCourse?.Semester?.Name,
-                        semesterYear = newCourse?.Semester?.Year,
+                        semesterPeriod = $"{newCourse?.Semester?.StartDate:MMM dd, yyyy} - {newCourse?.Semester?.EndDate:MMM dd, yyyy}",
                         majorName = newCourse?.Major?.Name,
                         lecturerName = newCourse?.Lecturer?.User?.Name
                     }
@@ -593,7 +595,7 @@ namespace SIMS.Controllers
                         subjectName = updatedCourse?.Subject?.Name,
                         subjectCode = updatedCourse?.Subject?.Code,
                         semesterName = updatedCourse?.Semester?.Name,
-                        semesterYear = updatedCourse?.Semester?.Year,
+                        semesterPeriod = $"{updatedCourse?.Semester?.StartDate:MMM dd, yyyy} - {updatedCourse?.Semester?.EndDate:MMM dd, yyyy}",
                         majorName = updatedCourse?.Major?.Name,
                         lecturerName = updatedCourse?.Lecturer?.User?.Name
                     }
@@ -969,13 +971,14 @@ namespace SIMS.Controllers
                 dateOfBirth = user.DateOfBirth,
                 phone = user.Phone,
                 gender = user.Gender,
-                address = user.Address
+                address = user.Address,
+                avatar = user.Avatar
             });
         }
 
         [HttpPost]
         public async Task<IActionResult> UpdateUser(string Id, string Name, string Role, 
-            string? StudentCode, DateTime? DateOfBirth, string? Phone, string? Gender, string? Address)
+            string? StudentCode, DateTime? DateOfBirth, string? Phone, string? Gender, string? Address, string? Password, string? Avatar)
         {
             try
             {
@@ -990,6 +993,23 @@ namespace SIMS.Controllers
                 user.Phone = Phone;
                 user.Gender = Gender;
                 user.Address = Address;
+                
+                // Update avatar if provided
+                if (!string.IsNullOrEmpty(Avatar))
+                {
+                    user.Avatar = Avatar;
+                }
+
+                // Update password if provided
+                if (!string.IsNullOrEmpty(Password))
+                {
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    var passwordResult = await _userManager.ResetPasswordAsync(user, token, Password);
+                    if (!passwordResult.Succeeded)
+                    {
+                        return Json(new { success = false, message = string.Join(", ", passwordResult.Errors.Select(e => e.Description)) });
+                    }
+                }
 
                 var result = await _userManager.UpdateAsync(user);
                 
@@ -1012,6 +1032,118 @@ namespace SIMS.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        // Get actions for edit modals
+        public async Task<IActionResult> GetCourse(int id)
+        {
+            var course = await _context.Courses
+                .Include(c => c.Subject)
+                .Include(c => c.Semester)
+                .Include(c => c.Major)
+                .Include(c => c.Lecturer)
+                .FirstOrDefaultAsync(c => c.CourseId == id);
+            
+            if (course == null)
+                return Json(new { success = false });
+
+            return Json(new
+            {
+                courseId = course.CourseId,
+                courseName = course.CourseName,
+                subjectId = course.SubjectId,
+                semesterId = course.SemesterId,
+                majorId = course.MajorId,
+                lecturerId = course.LecturerId
+            });
+        }
+
+        public async Task<IActionResult> GetSubject(int id)
+        {
+            var subject = await _context.Subjects.FindAsync(id);
+            if (subject == null)
+                return Json(new { success = false });
+
+            return Json(new
+            {
+                subjectId = subject.SubjectId,
+                code = subject.Code,
+                name = subject.Name
+            });
+        }
+
+        public async Task<IActionResult> GetDepartment(int id)
+        {
+            var department = await _context.Departments.FindAsync(id);
+            if (department == null)
+                return Json(new { success = false });
+
+            return Json(new
+            {
+                departmentId = department.DepartmentId,
+                name = department.Name
+            });
+        }
+
+        public async Task<IActionResult> GetMajor(int id)
+        {
+            var major = await _context.Majors
+                .Include(m => m.Department)
+                .FirstOrDefaultAsync(m => m.MajorId == id);
+            
+            if (major == null)
+                return Json(new { success = false });
+
+            return Json(new
+            {
+                majorId = major.MajorId,
+                name = major.Name,
+                departmentId = major.DepartmentId
+            });
+        }
+
+        public async Task<IActionResult> GetSemester(int id)
+        {
+            var semester = await _context.Semesters.FindAsync(id);
+            if (semester == null)
+                return Json(new { success = false });
+
+            return Json(new
+            {
+                semesterId = semester.SemesterId,
+                name = semester.Name,
+                startDate = semester.StartDate.ToString("yyyy-MM-dd"),
+                endDate = semester.EndDate.ToString("yyyy-MM-dd")
+            });
+        }
+
+        public async Task<IActionResult> GetStudentCourse(int studentId, int courseId)
+        {
+            var studentCourse = await _context.StudentCourses
+                .Include(sc => sc.Student)
+                .ThenInclude(s => s.User)
+                .Include(sc => sc.Course)
+                .FirstOrDefaultAsync(sc => sc.StudentId == studentId && sc.CourseId == courseId);
+
+            if (studentCourse == null)
+            {
+                _logger.LogWarning($"StudentCourse not found for studentId: {studentId}, courseId: {courseId}");
+                return Json(new { success = false });
+            }
+
+            var studentName = studentCourse.Student?.User?.Name ?? "Unknown Student";
+            var courseName = studentCourse.Course?.CourseName ?? "Unknown Course";
+
+            _logger.LogInformation($"Found StudentCourse: studentId={studentId}, courseId={courseId}, studentName={studentName}, courseName={courseName}");
+
+            return Json(new
+            {
+                success = true,
+                studentId = studentCourse.StudentId,
+                courseId = studentCourse.CourseId,
+                studentName = studentName,
+                courseName = courseName
+            });
         }
 
         [HttpPost]
@@ -1159,6 +1291,55 @@ namespace SIMS.Controllers
             }
         }
 
+        [HttpPost]
+        [IgnoreAntiforgeryToken]
+        public async Task<IActionResult> UpdateStudentCourseAssignment(int currentStudentId, int currentCourseId, int newStudentId, int newCourseId)
+        {
+            try
+            {
+                // Check if the new assignment already exists
+                var existingNew = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == newStudentId && sc.CourseId == newCourseId);
+
+                if (existingNew != null && (currentStudentId != newStudentId || currentCourseId != newCourseId))
+                {
+                    return Json(new { success = false, message = "Student is already assigned to this course." });
+                }
+
+                // If it's the same assignment, no need to update
+                if (currentStudentId == newStudentId && currentCourseId == newCourseId)
+                {
+                    return Json(new { success = true, message = "Assignment updated successfully!" });
+                }
+
+                // Remove the current assignment
+                var currentAssignment = await _context.StudentCourses
+                    .FirstOrDefaultAsync(sc => sc.StudentId == currentStudentId && sc.CourseId == currentCourseId);
+
+                if (currentAssignment != null)
+                {
+                    _context.StudentCourses.Remove(currentAssignment);
+                }
+
+                // Create new assignment
+                var newAssignment = new StudentCourse
+                {
+                    StudentId = newStudentId,
+                    CourseId = newCourseId,
+                    EnrollmentDate = DateTime.Now
+                };
+
+                _context.StudentCourses.Add(newAssignment);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Student course assignment updated successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = "Error: " + ex.Message });
+            }
+        }
+
         [HttpGet]
         [IgnoreAntiforgeryToken]
         public async Task<IActionResult> GetCourseStudents(int courseId)
@@ -1193,7 +1374,7 @@ namespace SIMS.Controllers
                     success = true,
                     courseName = course.CourseName,
                     subjectName = course.Subject.Name,
-                    semesterName = $"{course.Semester.Name} {course.Semester.Year}",
+                    semesterName = $"{course.Semester.Name} ({course.Semester.StartDate:MMM dd, yyyy} - {course.Semester.EndDate:MMM dd, yyyy})",
                     students = students
                 });
             }

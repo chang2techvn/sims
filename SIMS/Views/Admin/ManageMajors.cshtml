@@ -29,7 +29,7 @@
                             <tbody>
                                 @foreach (var major in Model)
                                 {
-                                    <tr data-major-id="@major.MajorId">
+                                    <tr style="cursor: pointer;" onclick="editMajor(@major.MajorId)" data-major-id="@major.MajorId">
                                         <td>@major.MajorId</td>
                                         <td>
                                             <strong>@major.Name</strong>
@@ -37,8 +37,8 @@
                                         <td>
                                             <span class="badge bg-secondary">@major.Department.Name</span>
                                         </td>
-                                        <td>
-                                            <button class="btn btn-link text-primary p-0 me-2" onclick="editMajor(@major.MajorId, '@major.Name', @major.DepartmentId)" title="Edit">
+                                        <td onclick="event.stopPropagation()">
+                                            <button class="btn btn-link text-primary p-0 me-2" onclick="editMajor(@major.MajorId)" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-link text-danger p-0" onclick="deleteMajor(@major.MajorId, '@major.Name')" title="Delete">
@@ -219,19 +219,29 @@ function createMajor() {
 }
 
 // Edit Major
-function editMajor(majorId, name, departmentId) {
-    document.getElementById('editMajorId').value = majorId;
-    document.getElementById('editMajorName').value = name;
-    
-    // Set department dropdown
-    $('#editDepartmentId').val(departmentId);
-    const departmentOption = $('#editDepartmentDropdown .dropdown-option[data-id="' + departmentId + '"]');
-    if (departmentOption.length > 0) {
-        $('#editDepartment').val(departmentOption.attr('data-name'));
-    }
-    
-    const modal = new bootstrap.Modal(document.getElementById('editMajorModal'));
-    modal.show();
+function editMajor(majorId) {
+    $.ajax({
+        url: '@Url.Action("GetMajor", "Admin")',
+        type: 'GET',
+        data: { id: majorId },
+        success: function(major) {
+            document.getElementById('editMajorId').value = major.majorId;
+            document.getElementById('editMajorName').value = major.name;
+            
+            // Set department dropdown
+            $('#editDepartmentId').val(major.departmentId);
+            const departmentOption = $('#editDepartmentDropdown .dropdown-option[data-id="' + major.departmentId + '"]');
+            if (departmentOption.length > 0) {
+                $('#editDepartment').val(departmentOption.attr('data-name'));
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('editMajorModal'));
+            modal.show();
+        },
+        error: function() {
+            showToast('Error loading major data.', 'danger');
+        }
+    });
 }
 
 // Update Major with AJAX

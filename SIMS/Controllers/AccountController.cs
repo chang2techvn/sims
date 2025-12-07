@@ -57,85 +57,6 @@ namespace SIMS.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Register()
-        {
-            ViewBag.Majors = await _context.Majors.Include(m => m.Department).ToListAsync();
-            ViewBag.Departments = await _context.Departments.ToListAsync();
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Register(RegisterViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                var user = new User
-                {
-                    UserName = model.Email,
-                    Email = model.Email,
-                    Name = model.Name,
-                    Phone = model.Phone,
-                    StudentCode = model.StudentCode,
-                    DateOfBirth = model.DateOfBirth,
-                    Gender = model.Gender,
-                    Address = model.Address,
-                    Role = model.Role
-                };
-
-                var result = await _userManager.CreateAsync(user, model.Password);
-                
-                if (result.Succeeded)
-                {
-                    // Create role-specific record
-                    switch (model.Role.ToLower())
-                    {
-                        case "student":
-                            if (model.MajorId.HasValue)
-                            {
-                                var student = new Student
-                                {
-                                    UserId = user.Id,
-                                    MajorId = model.MajorId.Value
-                                };
-                                _context.Students.Add(student);
-                            }
-                            break;
-                        case "lecturer":
-                            if (model.DepartmentId.HasValue)
-                            {
-                                var lecturer = new Lecturer
-                                {
-                                    UserId = user.Id,
-                                    DepartmentId = model.DepartmentId.Value
-                                };
-                                _context.Lecturers.Add(lecturer);
-                            }
-                            break;
-                        case "admin":
-                            var admin = new Admin
-                            {
-                                UserId = user.Id
-                            };
-                            _context.Admins.Add(admin);
-                            break;
-                    }
-                    
-                    await _context.SaveChangesAsync();
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Dashboard", "Home");
-                }
-                
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-            }
-            
-            ViewBag.Majors = await _context.Majors.Include(m => m.Department).ToListAsync();
-            ViewBag.Departments = await _context.Departments.ToListAsync();
-            return View(model);
-        }
-
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
@@ -265,13 +186,78 @@ namespace SIMS.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> UploadAvatar(IFormFile avatar)
+        public async Task<IActionResult> ChangePassword(string CurrentPassword, string NewPassword, string ConfirmPassword)
         {
             try
             {
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
                 {
+                    return Json(new { success = false, message = "User not found" });
+                }
+
+                // Check if user is student or lecturer (not admin)
+                if (user.Role.ToLower() != "student" && user.Role.ToLower() != "lecturer")
+                {
+                    return Json(new { success = false, message = "Unauthorized" });
+                }
+
+                // Validate new password confirmation
+                if (NewPassword != ConfirmPassword)
+                {
+                    return Json(new { success = false, message = "New password and confirmation do not match" });
+                }
+
+                // Change password
+                var result = await _userManager.ChangePasswordAsync(user, CurrentPassword, NewPassword);
+                
+                if (result.Succeeded)
+                {
+                    return Json(new { success = true, message = "Password changed successfully" });
+                }
+                else
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    return Json(new { success = false, message = errors });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UploadAvatar(IFormFile avatar, string? userId = null)
+        {
+            try
+            {
+                User user;
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    // Check if current user is admin using ASP.NET Identity roles
+                    if (User.IsInRole("Admin"))
+                    {
+                        // Admin uploading for another user
+                        user = await _userManager.FindByIdAsync(userId);
+                        Console.WriteLine($"Admin uploading for user: {userId}, user found: {user != null}");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Unauthorized: Current user is not admin");
+                        return Json(new { success = false, message = "Unauthorized" });
+                    }
+                }
+                else
+                {
+                    // User uploading for themselves
+                    user = await _userManager.GetUserAsync(User);
+                    Console.WriteLine($"Self-upload user: {user?.Id}");
+                }
+                
+                if (user == null)
+                {
+                    Console.WriteLine("Target user not found");
                     return Json(new { success = false, message = "User not found" });
                 }
 

@@ -61,25 +61,22 @@
         @foreach (var courseViewModel in Model)
         {
             var course = courseViewModel.Course;
-            <div class="col-xl-4 col-lg-6 col-md-6 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 mb-4">
                 <div class="card h-100 border-0 shadow-sm course-card">
                     <div class="card-header bg-gradient-primary text-white">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <h6 class="mb-1">
-                                    <i class="fas fa-book me-2"></i>
-                                    @course.Subject.Name
-                                </h6>
-                                <small class="opacity-75">@course.Subject.Code</small>
-                            </div>
-                            <span class="badge bg-white text-primary">@course.Semester.Name @course.Semester.Year</span>
+                        <div class="w-100">
+                            <h6 class="mb-1 text-truncate" title="@course.Subject.Name">
+                                <i class="fas fa-book me-2"></i>
+                                @course.Subject.Name
+                            </h6>
+                            <small class="opacity-75">@course.Subject.Code</small>
                         </div>
                     </div>
 
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
                         <h5 class="card-title mb-3">@course.CourseName</h5>
 
-                        <div class="course-info mb-3">
+                        <div class="course-info mb-3 flex-grow-1">
                             <div class="info-item mb-2">
                                 <i class="fas fa-graduation-cap text-warning me-2"></i>
                                 <span class="text-muted">Major:</span>
@@ -95,7 +92,7 @@
                             <div class="info-item">
                                 <i class="fas fa-calendar-alt text-info me-2"></i>
                                 <span class="text-muted">Semester:</span>
-                                <strong>@course.Semester.Name @course.Semester.Year</strong>
+                                <strong>@course.Semester.Name (@course.Semester.StartDate.ToString("MMM dd, yyyy") - @course.Semester.EndDate.ToString("MMM dd, yyyy"))</strong>
                             </div>
                         </div>
                     </div>

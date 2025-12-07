@@ -236,6 +236,21 @@
             <form id="editUserForm">
                 <input type="hidden" id="editUserId" name="Id" />
                 <div class="modal-body">
+                    <!-- Avatar Section -->
+                    <div class="text-center mb-4">
+                        <div class="user-avatar mb-3 position-relative d-inline-block">
+                            <img id="editAvatarPreview" src="" alt="Avatar" class="rounded-circle avatar-image" width="120" height="120" style="display: none;">
+                            <i class="fas fa-user-circle avatar-placeholder" style="font-size: 120px; color: var(--primary-orange);" id="editAvatarPlaceholder"></i>
+                            <div class="avatar-overlay">
+                                <label for="editAvatarUpload" class="avatar-upload-btn">
+                                    <i class="fas fa-camera"></i>
+                                </label>
+                                <input type="file" id="editAvatarUpload" name="avatar" accept="image/*" class="d-none">
+                            </div>
+                        </div>
+                        <p class="text-muted small">Click to change avatar</p>
+                    </div>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-3">
@@ -245,8 +260,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="editEmail" name="Email" required readonly />
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="editPassword" name="Password" placeholder="Leave blank to keep current password" />
                             </div>
                         </div>
                     </div>
@@ -507,6 +522,18 @@
                 $('#editName').val(user.name);
                 $('#editEmail').val(user.email);
                 
+                // Handle avatar - load from database
+                if (user.avatar) {
+                    $('#editAvatarPreview').attr('src', user.avatar).show();
+                    $('#editAvatarPlaceholder').hide();
+                } else {
+                    $('#editAvatarPreview').hide();
+                    $('#editAvatarPlaceholder').show();
+                }
+                
+                // Clear password field (can't load hashed password)
+                $('#editPassword').val('');
+                
                 // Set role dropdown
                 $('#editRoleId').val(user.role);
                 $('#editRole').val(user.role);
@@ -539,11 +566,62 @@
         
         const formData = new FormData(this);
         const data = Object.fromEntries(formData);
+        console.log('Form data:', data);
         
+        // Handle avatar upload first if there's a file
+        const avatarFile = $('#editAvatarUpload')[0].files[0];
+        if (avatarFile) {
+            const avatarFormData = new FormData();
+            avatarFormData.append('avatar', avatarFile);
+            avatarFormData.append('userId', data.Id); // Add user ID for admin upload
+            console.log('Uploading avatar for userId:', data.Id);
+            
+            $.ajax({
+                url: '@Url.Action("UploadAvatar", "Account")',
+                type: 'POST',
+                data: avatarFormData,
+                processData: false,
+                contentType: false,
+                success: function(avatarResponse) {
+                    console.log('Avatar upload response:', avatarResponse);
+                    if (avatarResponse.success) {
+                        // Update avatar URL in data
+                        data.Avatar = avatarResponse.avatarUrl;
+                        // Create FormData for user update (excluding file)
+                        const userUpdateData = new FormData();
+                        Object.keys(data).forEach(key => {
+                            if (key !== 'avatar') { // Exclude the file field
+                                userUpdateData.append(key, data[key]);
+                            }
+                        });
+                        // Now submit the user update
+                        submitUserUpdate(userUpdateData);
+                    } else {
+                        showToast('Error uploading avatar: ' + avatarResponse.message, 'danger');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Avatar upload error:', xhr.responseText, status, error);
+                    showToast('Error uploading avatar. Please try again.', 'danger');
+                }
+            });
+        } else {
+            // No avatar upload, create FormData without file
+            const userUpdateData = new FormData();
+            Object.keys(data).forEach(key => {
+                userUpdateData.append(key, data[key]);
+            });
+            submitUserUpdate(userUpdateData);
+        }
+    });
+
+    function submitUserUpdate(data) {
         $.ajax({
             url: '@Url.Action("UpdateUser", "Admin")',
             type: 'POST',
             data: data,
+            processData: false,  // Don't process the data
+            contentType: false,  // Don't set contentType
             success: function(response) {
                 if (response.success) {
                     $('#editUserModal').modal('hide');
@@ -557,7 +635,7 @@
                 showToast('Error updating user. Please try again.', 'danger');
             }
         });
-    });
+    }
 
     // Delete User Function
     let deleteUserId = null;
@@ -623,7 +701,39 @@
         }
     });
 
-// Searchable dropdown functionality
+// Edit Avatar Upload Preview
+$('#editAvatarUpload').on('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showToast('Please select a valid image file.', 'danger');
+            return;
+        }
+        
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Image size must be less than 5MB.', 'danger');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageUrl = e.target.result;
+            
+            // Hide placeholder and show image
+            $('#editAvatarPlaceholder').hide();
+            $('#editAvatarPreview').attr('src', imageUrl).show();
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Reset edit modal when closed
+$('#editUserModal').on('hidden.bs.modal', function() {
+    $('#editAvatarUpload').val(''); // Reset file input
+    $('#editPassword').val(''); // Reset password field
+});
 $('.searchable-dropdown-input').on('focus', function() {
     // Hide all dropdowns first
     $('.searchable-dropdown-menu').hide();

@@ -37,7 +37,7 @@
                                     int colorIndex = assignment.CourseId % courseColors.Length;
                                     string courseBgColor = courseColors[colorIndex];
                                     
-                                    <tr>
+                                    <tr class="clickable-row" onclick="editAssignment(@assignment.StudentId, @assignment.CourseId)" style="cursor: pointer;">
                                         <td>@counter</td>
                                         <td>
                                             <strong>@assignment.Student.User.Name</strong>
@@ -56,8 +56,11 @@
                                             <span class="badge bg-secondary">@assignment.Student.Major.Name</span>
                                         </td>
                                         <td>
+                                            <button class="btn btn-link text-primary p-0 me-2" onclick="event.stopPropagation(); editAssignment(@assignment.StudentId, @assignment.CourseId)" title="Edit Assignment">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                             <button class="btn btn-link text-danger p-0" 
-                                                    onclick="removeStudent(@assignment.StudentId, @assignment.CourseId, '@assignment.Student.User.Name', '@assignment.Course.CourseName')" 
+                                                    onclick="event.stopPropagation(); removeStudent(@assignment.StudentId, @assignment.CourseId, '@assignment.Student.User.Name', '@assignment.Course.CourseName')" 
                                                     title="Remove Assignment">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -162,6 +165,60 @@
     </div>
 </div>
 
+<!-- Edit Assignment Modal -->
+<div class="modal fade" id="editAssignmentModal" tabindex="-1" aria-labelledby="editAssignmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editAssignmentModalLabel"><i class="fas fa-edit"></i> Edit Student Assignment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editAssignmentForm">
+                    <input type="hidden" id="originalStudentId" />
+                    <input type="hidden" id="originalCourseId" />
+                    
+                    <div class="form-group mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-user-graduate"></i> Student
+                        </label>
+                        @{
+                            ViewBag.Id = "editStudentSearch";
+                            ViewBag.Name = "editStudentId";
+                            ViewBag.Placeholder = "Search and select student...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Students as List<SIMS.Models.Student>)?.Select(s => new { Id = s.StudentId, Name = s.User.Name + " (" + s.Major.Name + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label class="form-label">
+                            <i class="fas fa-book"></i> Course
+                        </label>
+                        @{
+                            ViewBag.Id = "editCourseSearch";
+                            ViewBag.Name = "editCourseId";
+                            ViewBag.Placeholder = "Search and select course...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Courses as List<SIMS.Models.Course>)?.Select(c => new { Id = c.CourseId, Name = c.CourseName });
+                        }
+                        @Html.Partial("_SearchableDropdown")
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="updateAssignment()">
+                    <i class="fas fa-save"></i> Update Assignment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <input type="hidden" id="removeStudentId" />
 <input type="hidden" id="removeCourseId" />
 
@@ -255,6 +312,75 @@
             .catch(error => {
                 console.error('Error:', error);
                 showToast('An error occurred while assigning the student.', 'error');
+            });
+        }
+
+        function editAssignment(studentId, courseId) {
+            console.log('Editing assignment:', studentId, courseId);
+            fetch('@Url.Action("GetStudentCourse", "Admin")?studentId=' + studentId + '&courseId=' + courseId)
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (data.success) {
+                    // Populate the edit modal
+                    document.getElementById('originalStudentId').value = data.studentId;
+                    document.getElementById('originalCourseId').value = data.courseId;
+                    
+                    // Set the dropdown values
+                    document.getElementById('editStudentSearch').value = data.studentName;
+                    document.getElementById('editStudentSearchId').value = data.studentId;
+                    document.getElementById('editCourseSearch').value = data.courseName;
+                    document.getElementById('editCourseSearchId').value = data.courseId;
+                    
+                    // Show the modal
+                    new bootstrap.Modal(document.getElementById('editAssignmentModal')).show();
+                } else {
+                    showToast('Failed to load assignment data.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while loading assignment data.', 'error');
+            });
+        }
+
+        function updateAssignment() {
+            const currentStudentId = document.getElementById('originalStudentId').value;
+            const currentCourseId = document.getElementById('originalCourseId').value;
+            const newStudentId = document.getElementById('editStudentSearchId').value;
+            const newCourseId = document.getElementById('editCourseSearchId').value;
+
+            if (!currentStudentId || !currentCourseId || !newStudentId || !newCourseId) {
+                showToast('Please select both student and course.', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('currentStudentId', currentStudentId);
+            formData.append('currentCourseId', currentCourseId);
+            formData.append('newStudentId', newStudentId);
+            formData.append('newCourseId', newCourseId);
+
+            fetch('@Url.Action("UpdateStudentCourseAssignment", "Admin")', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    $('#editAssignmentModal').modal('hide');
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1000); // Delay reload to show toast
+                } else {
+                    showToast(data.message, 'warning');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred while updating the assignment.', 'error');
             });
         }
 

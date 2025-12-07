@@ -14,8 +14,6 @@ namespace SIMS.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly IMemoryCache _cache;
-        private const string DASHBOARD_STATS_CACHE_KEY = "DashboardStatistics";
-        private readonly TimeSpan CACHE_DURATION = TimeSpan.FromMinutes(10);
 
         public HomeController(ILogger<HomeController> logger, UserManager<User> userManager, ApplicationDbContext context, IMemoryCache cache) : base(userManager)
         {
@@ -24,11 +22,25 @@ namespace SIMS.Controllers
             _cache = cache;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             if (User.Identity!.IsAuthenticated)
             {
-                return RedirectToAction("Dashboard");
+                var user = await base._userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    switch (user.Role.ToLower())
+                    {
+                        case "admin":
+                            return RedirectToAction("Dashboard");
+                        case "lecturer":
+                            return RedirectToAction("MyCourses", "Lecturer");
+                        case "student":
+                            return RedirectToAction("MyCourses", "Student");
+                        default:
+                            return RedirectToAction("Dashboard");
+                    }
+                }
             }
             return RedirectToAction("Login", "Account");
         }
@@ -42,38 +54,48 @@ namespace SIMS.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
+            // Redirect non-admin users to their respective MyCourses pages
+            if (user.Role.ToLower() != "admin")
+            {
+                switch (user.Role.ToLower())
+                {
+                    case "lecturer":
+                        return RedirectToAction("MyCourses", "Lecturer");
+                    case "student":
+                        return RedirectToAction("MyCourses", "Student");
+                    default:
+                        return RedirectToAction("MyCourses", "Student"); // fallback
+                }
+            }
+
             ViewBag.UserName = user.Name;
-            ViewBag.UserRole = user.Role;
+            ViewBag.UserRole = user.Role.ToLower();
 
             // Get dashboard statistics based on role
             switch (user.Role.ToLower())
             {
                 case "admin":
-                    var adminStats = await _cache.GetOrCreateAsync($"{DASHBOARD_STATS_CACHE_KEY}_Admin", async entry =>
-                    {
-                        entry.AbsoluteExpirationRelativeToNow = CACHE_DURATION;
-                        return new
+                    ViewBag.TotalStudents = await _context.Students.CountAsync();
+                    ViewBag.TotalLecturers = await _context.Lecturers.CountAsync();
+                    ViewBag.TotalAdmins = await _context.Admins.CountAsync();
+                    ViewBag.TotalUsers = await _context.Users.CountAsync();
+                    ViewBag.TotalCourses = await _context.Courses.CountAsync();
+
+                    // Get recent enrollment activities
+                    var recentEnrollments = await _context.StudentCourses
+                        .Include(sc => sc.Student)
+                        .ThenInclude(s => s.User)
+                        .Include(sc => sc.Course)
+                        .OrderByDescending(sc => sc.EnrollmentDate)
+                        .Take(10)
+                        .Select(sc => new
                         {
-                            TotalStudents = await _context.Students.CountAsync(),
-                            TotalCourses = await _context.Courses.CountAsync(),
-                            TotalLecturers = await _context.Lecturers.CountAsync(),
-                            TotalAdmins = await _context.Admins.CountAsync(),
-                            TotalUsers = await _context.Users.CountAsync(),
-                            TotalDepartments = await _context.Departments.CountAsync(),
-                            TotalMajors = await _context.Majors.CountAsync(),
-                            TotalSubjects = await _context.Subjects.CountAsync(),
-                            TotalSemesters = await _context.Semesters.CountAsync()
-                        };
-                    });
-                    ViewBag.TotalStudents = adminStats!.TotalStudents;
-                    ViewBag.TotalCourses = adminStats.TotalCourses;
-                    ViewBag.TotalLecturers = adminStats.TotalLecturers;
-                    ViewBag.TotalAdmins = adminStats.TotalAdmins;
-                    ViewBag.TotalUsers = adminStats.TotalUsers;
-                    ViewBag.TotalDepartments = adminStats.TotalDepartments;
-                    ViewBag.TotalMajors = adminStats.TotalMajors;
-                    ViewBag.TotalSubjects = adminStats.TotalSubjects;
-                    ViewBag.TotalSemesters = adminStats.TotalSemesters;
+                            StudentName = sc.Student.User.Name,
+                            CourseName = sc.Course.CourseName,
+                            EnrollmentDate = sc.EnrollmentDate
+                        })
+                        .ToListAsync();
+                    ViewBag.RecentEnrollments = recentEnrollments;
                     break;
                 case "lecturer":
                     var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
@@ -96,7 +118,7 @@ namespace SIMS.Controllers
                     break;
             }
 
-            return View("~/Views/Admin/Dashboard.cshtml");
+            return View();
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

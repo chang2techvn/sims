@@ -221,14 +221,14 @@ function animateCount(element, start, end, duration) {
     }, stepTime);
 }
 
-// Animate stats on dashboard load
-$(window).on('load', function() {
-    $('.stat-value').each(function() {
-        var finalValue = parseInt($(this).text());
-        $(this).text('0');
-        animateCount(this, 0, finalValue, 1000);
-    });
-});
+// Animate stats on dashboard load - DISABLED
+// $(window).on('load', function() {
+//     $('.stat-value').each(function() {
+//         var finalValue = parseInt($(this).text());
+//         $(this).text('0');
+//         animateCount(this, 0, finalValue, 1000);
+//     });
+// });
 
 // Enhanced loading states
 function showLoadingOverlay(message = 'Loading...') {

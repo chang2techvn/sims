@@ -13,8 +13,10 @@ namespace SIMS.Models
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(10)]
-        public string Year { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+
+        [Required]
+        public DateTime EndDate { get; set; }
 
         // Navigation properties
         public virtual ICollection<Course> Courses { get; set; } = new List<Course>();
@@ -75,6 +77,9 @@ namespace SIMS.Models
         [Key]
         [Column(Order = 1)]
         public int CourseId { get; set; }
+
+        [Required]
+        public DateTime EnrollmentDate { get; set; }
 
         public virtual Student Student { get; set; } = null!;
         public virtual Course Course { get; set; } = null!;

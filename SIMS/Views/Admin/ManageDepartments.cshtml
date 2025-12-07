@@ -28,11 +28,11 @@
                             <tbody>
                                 @foreach (var department in Model)
                                 {
-                                    <tr data-department-id="@department.DepartmentId">
+                                    <tr style="cursor: pointer;" onclick="editDepartment(@department.DepartmentId)" data-department-id="@department.DepartmentId">
                                         <td>@department.DepartmentId</td>
                                         <td>@department.Name</td>
-                                        <td>
-                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit" onclick="editDepartment(@department.DepartmentId, '@department.Name')">
+                                        <td onclick="event.stopPropagation()">
+                                            <button class="btn btn-link text-primary p-0 me-2" title="Edit" onclick="editDepartment(@department.DepartmentId)">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-link text-danger p-0" title="Delete" onclick="deleteDepartment(@department.DepartmentId, '@department.Name')">
@@ -164,10 +164,20 @@
         let deleteDepartmentId = null;
         let deleteDepartmentName = null;
 
-        function editDepartment(id, name) {
-            document.getElementById('editDepartmentId').value = id;
-            document.getElementById('editDepartmentName').value = name;
-            new bootstrap.Modal(document.getElementById('editDepartmentModal')).show();
+        function editDepartment(departmentId) {
+            $.ajax({
+                url: '@Url.Action("GetDepartment", "Admin")',
+                type: 'GET',
+                data: { id: departmentId },
+                success: function(department) {
+                    document.getElementById('editDepartmentId').value = department.departmentId;
+                    document.getElementById('editDepartmentName').value = department.name;
+                    new bootstrap.Modal(document.getElementById('editDepartmentModal')).show();
+                },
+                error: function() {
+                    showToast('Error loading department data.', 'danger');
+                }
+            });
         }
 
         function deleteDepartment(id, name) {

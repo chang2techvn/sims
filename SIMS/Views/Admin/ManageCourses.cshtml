@@ -4,7 +4,7 @@
 }
 
 <div class="row">
-    <div class="col-lg-8">
+    <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="fas fa-book"></i> Courses List</h5>
@@ -13,6 +13,9 @@
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" id="courseSearchInput" class="form-control search-input" placeholder="Search courses...">
                     </div>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCourseModal" onclick="addNewCourse()">
+                        <i class="fas fa-plus"></i> Add New Course
+                    </button>
                 </div>
             </div>
             <div class="card-body">
@@ -35,20 +38,19 @@
                                 int counter = 1;
                                 @foreach (var course in Model)
                                 {
-                                    <tr data-course-id="@course.CourseId" data-subject-id="@course.SubjectId" data-semester-id="@course.SemesterId" data-major-id="@course.MajorId" data-lecturer-id="@course.LecturerId">
+                                    <tr style="cursor: pointer;" onclick="editCourse(@course.CourseId)" data-course-id="@course.CourseId" data-subject-id="@course.SubjectId" data-semester-id="@course.SemesterId" data-major-id="@course.MajorId" data-lecturer-id="@course.LecturerId">
                                         <td>@counter</td>
                                         <td>
-                                            <strong>@course.CourseName</strong>
-                                            <br><small class="text-muted">@course.Subject.Code</small>
+                                            <strong>@course.CourseName (@course.Subject.Code)</strong>
                                         </td>
                                         <td>@course.Subject.Name</td>
-                                        <td>@course.Semester.Name @course.Semester.Year</td>
+                                        <td>@course.Semester.Name</td>
                                         <td>
                                             <span class="badge bg-secondary">@course.Major.Name</span>
                                         </td>
                                         <td>@course.Lecturer.User.Name</td>
-                                        <td>
-                                            <button class="btn btn-link text-primary p-0 me-2" onclick="editCourse(@course.CourseId, '@course.CourseName', @course.SubjectId, @course.SemesterId, @course.MajorId, @course.LecturerId)" title="Edit">
+                                        <td onclick="event.stopPropagation()">
+                                            <button class="btn btn-link text-primary p-0 me-2" onclick="editCourse(@course.CourseId)" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-link text-info p-0 me-2" onclick="viewCourseStudents(@course.CourseId, '@course.CourseName')" title="View Students">
@@ -78,78 +80,6 @@
             </div>
         </div>
     </div>
-    
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">
-                <h5><i class="fas fa-plus"></i> Add New Course</h5>
-            </div>
-            <div class="card-body">
-                <form id="createCourseForm">
-                    <div class="form-group">
-                        <label class="form-label">Course Name</label>
-                        <input name="CourseName" id="createCourseName" class="form-control" placeholder="Enter course name" required />
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Subject</label>
-                        @{
-                            ViewBag.Id = "createSubject";
-                            ViewBag.Name = "SubjectId";
-                            ViewBag.Placeholder = "Search and select subject...";
-                            ViewBag.Label = "";
-                            ViewBag.Icon = "";
-                            ViewBag.Items = (ViewBag.Subjects as List<SIMS.Models.Subject>)?.Select(s => new { Id = s.SubjectId, Name = s.Name + " (" + s.Code + ")" });
-                        }
-                        @Html.Partial("_SearchableDropdown")
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Semester</label>
-                        @{
-                            ViewBag.Id = "createSemester";
-                            ViewBag.Name = "SemesterId";
-                            ViewBag.Placeholder = "Search and select semester...";
-                            ViewBag.Label = "";
-                            ViewBag.Icon = "";
-                            ViewBag.Items = (ViewBag.Semesters as List<SIMS.Models.Semester>)?.Select(s => new { Id = s.SemesterId, Name = s.Name + " (" + s.Year + ")" });
-                        }
-                        @Html.Partial("_SearchableDropdown")
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Major</label>
-                        @{
-                            ViewBag.Id = "createMajor";
-                            ViewBag.Name = "MajorId";
-                            ViewBag.Placeholder = "Search and select major...";
-                            ViewBag.Label = "";
-                            ViewBag.Icon = "";
-                            ViewBag.Items = (ViewBag.Majors as List<SIMS.Models.Major>)?.Select(m => new { Id = m.MajorId, Name = m.Name });
-                        }
-                        @Html.Partial("_SearchableDropdown")
-                    </div>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Lecturer</label>
-                        @{
-                            ViewBag.Id = "createLecturer";
-                            ViewBag.Name = "LecturerId";
-                            ViewBag.Placeholder = "Search and select lecturer...";
-                            ViewBag.Label = "";
-                            ViewBag.Icon = "";
-                            ViewBag.Items = (ViewBag.Lecturers as List<SIMS.Models.Lecturer>)?.Select(l => new { Id = l.LecturerId, Name = l.User.Name + " (" + l.User.Email + ")" });
-                        }
-                        @Html.Partial("_SearchableDropdown")
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-plus"></i> Add Course
-                    </button>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Edit Course Modal -->
@@ -157,7 +87,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-edit"></i> Edit Course</h5>
+                <h5 class="modal-title" id="editCourseModalTitle"><i class="fas fa-edit"></i> Edit Course</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -190,7 +120,7 @@
                             ViewBag.Placeholder = "Search and select semester...";
                             ViewBag.Label = "";
                             ViewBag.Icon = "";
-                            ViewBag.Items = (ViewBag.Semesters as List<SIMS.Models.Semester>)?.Select(s => new { Id = s.SemesterId, Name = s.Name + " (" + s.Year + ")" });
+                            ViewBag.Items = (ViewBag.Semesters as List<SIMS.Models.Semester>)?.Select(s => new { Id = s.SemesterId, Name = s.Name + " (" + s.StartDate.ToString("MMM dd, yyyy") + " - " + s.EndDate.ToString("MMM dd, yyyy") + ")" });
                         }
                         @Html.Partial("_SearchableDropdown")
                     </div>
@@ -284,129 +214,84 @@
 
 @section Scripts {
 <script>
-    // Create Course
-    $('#createCourseForm').on('submit', function(e) {
-        e.preventDefault();
+    // Add New Course Function
+    function addNewCourse() {
+        // Reset modal for adding new course
+        $('#editCourseModalTitle').html('<i class="fas fa-plus"></i> Add New Course');
+        $('#editCourseId').val('');
+        $('#editCourseName').val('');
         
-        var formData = {
-            CourseName: $('#createCourseName').val(),
-            SubjectId: $('#createSubjectId').val(),
-            SemesterId: $('#createSemesterId').val(),
-            MajorId: $('#createMajorId').val(),
-            LecturerId: $('#createLecturerId').val()
-        };
+        // Reset all dropdowns
+        $('#editSubjectId').val('');
+        $('#editSubject').val('');
+        $('#editSemesterId').val('');
+        $('#editSemester').val('');
+        $('#editMajorId').val('');
+        $('#editMajor').val('');
+        $('#editLecturerId').val('');
+        $('#editLecturer').val('');
         
-        var formDataObj = new FormData();
-        formDataObj.append('CourseName', formData.CourseName);
-        formDataObj.append('SubjectId', formData.SubjectId);
-        formDataObj.append('SemesterId', formData.SemesterId);
-        formDataObj.append('MajorId', formData.MajorId);
-        formDataObj.append('LecturerId', formData.LecturerId);
+        // Change button text
+        $('#editCourseForm button[type="button"]').html('<i class="fas fa-plus"></i> Add Course');
+    }
+
+    // Edit Course
+    function editCourse(courseId) {
+        // Set modal for editing
+        $('#editCourseModalTitle').html('<i class="fas fa-edit"></i> Edit Course');
+        $('#editCourseForm button[type="button"]').html('<i class="fas fa-save"></i> Save Changes');
         
         $.ajax({
-            url: '@Url.Action("CreateCourse", "Admin")',
-            type: 'POST',
-            data: formDataObj,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    showToast(response.message, 'success');
-                    
-                    var course = response.course;
-                    var courseNameEscaped = (course.courseName || '').replace(/'/g, "\\'");
-                    
-                    // Calculate next counter
-                    var currentRows = $('#coursesTable tbody tr').length;
-                    var nextCounter = currentRows + 1;
-                    
-                    // Add new row to table
-                    var newRow = `
-                        <tr data-course-id="${course.courseId}" data-subject-id="${course.subjectId}" data-semester-id="${course.semesterId}" data-major-id="${course.majorId}" data-lecturer-id="${course.lecturerId}">
-                            <td>${nextCounter}</td>
-                            <td>
-                                <strong>${course.courseName || 'N/A'}</strong>
-                                <br><small class="text-muted">${course.subjectCode || 'N/A'}</small>
-                            </td>
-                            <td>${course.subjectName || 'N/A'}</td>
-                            <td>${course.semesterName || 'N/A'} ${course.semesterYear || ''}</td>
-                            <td><span class="badge bg-secondary">${course.majorName || 'N/A'}</span></td>
-                            <td>${course.lecturerName || 'N/A'}</td>
-                            <td>
-                                <button class="btn btn-link text-primary p-0 me-2" onclick="editCourse(${course.courseId}, '${courseNameEscaped}', ${$('#createSubjectId').val()}, ${$('#createSemesterId').val()}, ${$('#createMajorId').val()}, ${$('#createLecturerId').val()})" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <a href="@Url.Action("CourseStudents", "Admin")?id=${course.courseId}" class="btn btn-link text-info p-0 me-2" title="View Students">
-                                    <i class="fas fa-users"></i>
-                                </a>
-                                <button class="btn btn-link text-danger p-0" onclick="deleteCourse(${course.courseId}, '${courseNameEscaped}')" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
-                    
-                    // Check if table has "no courses" message or empty
-                    var emptyMessage = $('#coursesTable tbody tr td[colspan]');
-                    if (emptyMessage.length > 0) {
-                        $('#coursesTable tbody').html(newRow);
-                    } else {
-                        $('#coursesTable tbody').append(newRow);
-                    }
-                    
-                    // Reset form
-                    $('#createCourseForm')[0].reset();
-                } else {
-                    showToast(response.message || 'Failed to create course', 'danger');
+            url: '@Url.Action("GetCourse", "Admin")',
+            type: 'GET',
+            data: { id: courseId },
+            success: function(course) {
+                $('#editCourseId').val(course.courseId);
+                $('#editCourseName').val(course.courseName);
+                
+                // Set subject dropdown
+                $('#editSubjectId').val(course.subjectId);
+                const subjectOption = $('#editSubjectDropdown .dropdown-option[data-id="' + course.subjectId + '"]');
+                if (subjectOption.length > 0) {
+                    $('#editSubject').val(subjectOption.attr('data-name'));
                 }
+                
+                // Set semester dropdown
+                $('#editSemesterId').val(course.semesterId);
+                const semesterOption = $('#editSemesterDropdown .dropdown-option[data-id="' + course.semesterId + '"]');
+                if (semesterOption.length > 0) {
+                    $('#editSemester').val(semesterOption.attr('data-name'));
+                }
+                
+                // Set major dropdown
+                $('#editMajorId').val(course.majorId);
+                const majorOption = $('#editMajorDropdown .dropdown-option[data-id="' + course.majorId + '"]');
+                if (majorOption.length > 0) {
+                    $('#editMajor').val(majorOption.attr('data-name'));
+                }
+                
+                // Set lecturer dropdown
+                $('#editLecturerId').val(course.lecturerId);
+                const lecturerOption = $('#editLecturerDropdown .dropdown-option[data-id="' + course.lecturerId + '"]');
+                if (lecturerOption.length > 0) {
+                    $('#editLecturer').val(lecturerOption.attr('data-name'));
+                }
+                
+                $('#editCourseModal').modal('show');
             },
-            error: function(xhr, status, error) {
-                console.error('Create course error:', error, xhr.responseText);
-                showToast('Failed to create course', 'danger');
+            error: function() {
+                showToast('Error loading course data.', 'danger');
             }
         });
-    });
-    
-    // Edit Course
-    function editCourse(id, name, subjectId, semesterId, majorId, lecturerId) {
-        $('#editCourseId').val(id);
-        $('#editCourseName').val(name);
-        
-        // Set subject dropdown
-        $('#editSubjectId').val(subjectId);
-        const subjectOption = $('#editSubjectDropdown .dropdown-option[data-id="' + subjectId + '"]');
-        if (subjectOption.length > 0) {
-            $('#editSubject').val(subjectOption.attr('data-name'));
-        }
-        
-        // Set semester dropdown
-        $('#editSemesterId').val(semesterId);
-        const semesterOption = $('#editSemesterDropdown .dropdown-option[data-id="' + semesterId + '"]');
-        if (semesterOption.length > 0) {
-            $('#editSemester').val(semesterOption.attr('data-name'));
-        }
-        
-        // Set major dropdown
-        $('#editMajorId').val(majorId);
-        const majorOption = $('#editMajorDropdown .dropdown-option[data-id="' + majorId + '"]');
-        if (majorOption.length > 0) {
-            $('#editMajor').val(majorOption.attr('data-name'));
-        }
-        
-        // Set lecturer dropdown
-        $('#editLecturerId').val(lecturerId);
-        const lecturerOption = $('#editLecturerDropdown .dropdown-option[data-id="' + lecturerId + '"]');
-        if (lecturerOption.length > 0) {
-            $('#editLecturer').val(lecturerOption.attr('data-name'));
-        }
-        
-        $('#editCourseModal').modal('show');
     }
     
-    // Update Course
+    // Save Course (Add or Update)
     function updateCourse() {
+        var courseId = $('#editCourseId').val();
+        var isEdit = courseId && courseId.trim() !== '';
+        
         var formData = {
-            CourseId: $('#editCourseId').val(),
+            CourseId: courseId,
             CourseName: $('#editCourseName').val(),
             SubjectId: $('#editSubjectId').val(),
             SemesterId: $('#editSemesterId').val(),
@@ -422,8 +307,10 @@
         formDataObj.append('MajorId', formData.MajorId);
         formDataObj.append('LecturerId', formData.LecturerId);
         
+        var url = isEdit ? '@Url.Action("UpdateCourse", "Admin")' : '@Url.Action("CreateCourse", "Admin")';
+        
         $.ajax({
-            url: '@Url.Action("UpdateCourse", "Admin")',
+            url: url,
             type: 'POST',
             data: formDataObj,
             processData: false,
@@ -435,38 +322,63 @@
                     var course = response.course;
                     var courseNameEscaped = (course.courseName || '').replace(/'/g, "\\'");
                     
-                    // Update row in table
-                    var row = $(`tr[data-course-id="${formData.CourseId}"]`);
-                    row.html(`
-                        <td>
-                            <strong>${course.courseName || 'N/A'}</strong>
-                            <br><small class="text-muted">${course.subjectCode || 'N/A'}</small>
-                        </td>
-                        <td>${course.subjectName || 'N/A'}</td>
-                        <td>${course.semesterName || 'N/A'} ${course.semesterYear || ''}</td>
-                        <td><span class="badge bg-secondary">${course.majorName || 'N/A'}</span></td>
-                        <td>${course.lecturerName || 'N/A'}</td>
-                        <td>
-                            <button class="btn btn-link text-primary p-0 me-2" onclick="editCourse(${course.courseId}, '${courseNameEscaped}', ${formData.SubjectId}, ${formData.SemesterId}, ${formData.MajorId}, ${formData.LecturerId})" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <a href="@Url.Action("CourseStudents", "Admin")?id=${course.courseId}" class="btn btn-link text-info p-0 me-2" title="View Students">
-                                <i class="fas fa-users"></i>
-                            </a>
-                            <button class="btn btn-link text-danger p-0" onclick="deleteCourse(${course.courseId}, '${courseNameEscaped}')" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    `);
+                    if (isEdit) {
+                        // Update existing row
+                        var row = $(`tr[data-course-id="${formData.CourseId}"]`);
+                        row.attr('data-subject-id', course.subjectId);
+                        row.attr('data-semester-id', course.semesterId);
+                        row.attr('data-major-id', course.majorId);
+                        row.attr('data-lecturer-id', course.lecturerId);
+                        
+                        row.find('td:nth-child(2)').html(`<strong>${course.courseName || 'N/A'} (${course.subjectCode || 'N/A'})</strong>`);
+                        row.find('td:nth-child(3)').text(course.subjectName || 'N/A');
+                        row.find('td:nth-child(4)').text(`${course.semesterName || 'N/A'} ${course.semesterYear || ''}`);
+                        row.find('td:nth-child(5)').html(`<span class="badge bg-secondary">${course.majorName || 'N/A'}</span>`);
+                        row.find('td:nth-child(6)').text(course.lecturerName || 'N/A');
+                    } else {
+                        // Add new row
+                        var currentRows = $('#coursesTable tbody tr').not('#noResultsMessage').length;
+                        var nextCounter = currentRows + 1;
+                        
+                        var newRow = `
+                            <tr style="cursor: pointer;" onclick="editCourse(${course.courseId})" data-course-id="${course.courseId}" data-subject-id="${course.subjectId}" data-semester-id="${course.semesterId}" data-major-id="${course.majorId}" data-lecturer-id="${course.lecturerId}">
+                                <td>${nextCounter}</td>
+                                <td><strong>${course.courseName || 'N/A'} (${course.subjectCode || 'N/A'})</strong></td>
+                                <td>${course.subjectName || 'N/A'}</td>
+                                <td>${course.semesterName || 'N/A'} ${course.semesterYear || ''}</td>
+                                <td><span class="badge bg-secondary">${course.majorName || 'N/A'}</span></td>
+                                <td>${course.lecturerName || 'N/A'}</td>
+                                <td onclick="event.stopPropagation()">
+                                    <button class="btn btn-link text-primary p-0 me-2" onclick="editCourse(${course.courseId})" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-link text-info p-0 me-2" onclick="viewCourseStudents(${course.courseId}, '${courseNameEscaped}')" title="View Students">
+                                        <i class="fas fa-users"></i>
+                                    </button>
+                                    <button class="btn btn-link text-danger p-0" onclick="deleteCourse(${course.courseId}, '${courseNameEscaped}')" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        
+                        // Check if table has "no courses" message
+                        var emptyMessage = $('#coursesTable tbody tr td[colspan]');
+                        if (emptyMessage.length > 0) {
+                            $('#coursesTable tbody').html(newRow);
+                        } else {
+                            $('#coursesTable tbody').append(newRow);
+                        }
+                    }
                     
                     $('#editCourseModal').modal('hide');
                 } else {
-                    showToast(response.message || 'Failed to update course', 'danger');
+                    showToast(response.message || 'Failed to save course', 'danger');
                 }
             },
             error: function(xhr, status, error) {
-                console.error('Update course error:', error, xhr.responseText);
-                showToast('Failed to update course', 'danger');
+                console.error('Save course error:', error, xhr.responseText);
+                showToast('Failed to save course', 'danger');
             }
         });
     }
