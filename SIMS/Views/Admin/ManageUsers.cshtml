@@ -107,6 +107,7 @@
                     </tbody>
                 </table>
             </div>
+            @Html.Partial("_Pagination")
         }
         else
         {
@@ -152,12 +153,19 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label class="form-label">Role *</label>
-                                <select class="form-select" name="Role" required>
-                                    <option value="">Select Role</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Lecturer">Lecturer</option>
-                                    <option value="Student">Student</option>
-                                </select>
+                                @{
+                                    ViewBag.Id = "addRole";
+                                    ViewBag.Name = "Role";
+                                    ViewBag.Placeholder = "Search and select role...";
+                                    ViewBag.Label = "";
+                                    ViewBag.Icon = "";
+                                    ViewBag.Items = new List<dynamic> {
+                                        new { Id = "Admin", Name = "Admin" },
+                                        new { Id = "Lecturer", Name = "Lecturer" },
+                                        new { Id = "Student", Name = "Student" }
+                                    };
+                                }
+                                @Html.Partial("_SearchableDropdown")
                             </div>
                         </div>
                     </div>
@@ -185,12 +193,19 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label class="form-label">Gender</label>
-                                <select class="form-select" name="Gender">
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                @{
+                                    ViewBag.Id = "addGender";
+                                    ViewBag.Name = "Gender";
+                                    ViewBag.Placeholder = "Search and select gender...";
+                                    ViewBag.Label = "";
+                                    ViewBag.Icon = "";
+                                    ViewBag.Items = new List<dynamic> {
+                                        new { Id = "Male", Name = "Male" },
+                                        new { Id = "Female", Name = "Female" },
+                                        new { Id = "Other", Name = "Other" }
+                                    };
+                                }
+                                @Html.Partial("_SearchableDropdown")
                             </div>
                         </div>
                     </div>
@@ -239,11 +254,19 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label class="form-label">Role *</label>
-                                <select class="form-select" id="editRole" name="Role" required>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Lecturer">Lecturer</option>
-                                    <option value="Student">Student</option>
-                                </select>
+                                @{
+                                    ViewBag.Id = "editRole";
+                                    ViewBag.Name = "Role";
+                                    ViewBag.Placeholder = "Search and select role...";
+                                    ViewBag.Label = "";
+                                    ViewBag.Icon = "";
+                                    ViewBag.Items = new List<dynamic> {
+                                        new { Id = "Admin", Name = "Admin" },
+                                        new { Id = "Lecturer", Name = "Lecturer" },
+                                        new { Id = "Student", Name = "Student" }
+                                    };
+                                }
+                                @Html.Partial("_SearchableDropdown")
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -271,12 +294,19 @@
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label class="form-label">Gender</label>
-                                <select class="form-select" id="editGender" name="Gender">
-                                    <option value="">Select Gender</option>
-                                    <option value="Male">Male</option>
-                                    <option value="Female">Female</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                                @{
+                                    ViewBag.Id = "editGender";
+                                    ViewBag.Name = "Gender";
+                                    ViewBag.Placeholder = "Search and select gender...";
+                                    ViewBag.Label = "";
+                                    ViewBag.Icon = "";
+                                    ViewBag.Items = new List<dynamic> {
+                                        new { Id = "Male", Name = "Male" },
+                                        new { Id = "Female", Name = "Female" },
+                                        new { Id = "Other", Name = "Other" }
+                                    };
+                                }
+                                @Html.Partial("_SearchableDropdown")
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -476,10 +506,18 @@
                 $('#editUserId').val(user.id);
                 $('#editName').val(user.name);
                 $('#editEmail').val(user.email);
+                
+                // Set role dropdown
+                $('#editRoleId').val(user.role);
                 $('#editRole').val(user.role);
+                
                 $('#editStudentCode').val(user.studentCode);
                 $('#editPhone').val(user.phone);
+                
+                // Set gender dropdown
+                $('#editGenderId').val(user.gender);
                 $('#editGender').val(user.gender);
+                
                 $('#editAddress').val(user.address);
                 
                 if (user.dateOfBirth) {
@@ -584,5 +622,45 @@
             $('#noResultsMessage').remove();
         }
     });
+
+// Searchable dropdown functionality
+$('.searchable-dropdown-input').on('focus', function() {
+    // Hide all dropdowns first
+    $('.searchable-dropdown-menu').hide();
+    // Show the corresponding dropdown
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId).show();
+});
+
+$('.searchable-dropdown-input').on('input', function() {
+    var query = $(this).val().toLowerCase();
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId + ' .dropdown-option').each(function() {
+        var text = $(this).text().toLowerCase();
+        if (text.includes(query)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+});
+
+$('.dropdown-option').on('click', function(e) {
+    e.preventDefault();
+    var id = $(this).data('id');
+    var name = $(this).data('name');
+    var input = $(this).closest('.position-relative').find('.searchable-dropdown-input');
+    var hidden = $(this).closest('.position-relative').find('input[type="hidden"]');
+    input.val(name);
+    hidden.val(id);
+    $(this).closest('.dropdown-menu').hide();
+});
+
+// Hide dropdown when click outside
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.searchable-dropdown-menu').hide();
+    }
+});
 </script>
 }

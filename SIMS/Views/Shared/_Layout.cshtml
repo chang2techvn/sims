@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 </head>
 <body>
     @if (User.Identity!.IsAuthenticated)
@@ -83,21 +84,9 @@
                         @if (User.IsInRole("Student") || (ViewBag.UserRole?.ToString()?.ToLower() == "student"))
                         {
                             <li class="nav-item">
-                                <a href="@Url.Action("Register", "Student")" class="nav-link">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Register</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a href="@Url.Action("MyCourses", "Student")" class="nav-link">
                                     <i class="fas fa-book"></i>
                                     <span>My Courses</span>
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("AvailableCourses", "Student")" class="nav-link">
-                                    <i class="fas fa-search"></i>
-                                    <span>Available Courses</span>
                                 </a>
                             </li>
                         }
@@ -180,6 +169,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
     <!-- Toast Container -->

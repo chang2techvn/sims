@@ -22,7 +22,7 @@ namespace SIMS.Controllers
         public async Task<IActionResult> MyCourses()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null || user.Role != "student")
+            if (user == null || !string.Equals(user.Role, "student", StringComparison.OrdinalIgnoreCase))
             {
                 return Forbid();
             }
@@ -33,19 +33,97 @@ namespace SIMS.Controllers
                 return NotFound();
             }
 
-            var courses = await _context.StudentCourses
+            // Load course IDs first, then query Courses with explicit includes to ensure nested navigation properties are populated
+            var courseIds = await _context.StudentCourses
                 .Where(sc => sc.StudentId == student.StudentId)
-                .Include(sc => sc.Course)
-                .ThenInclude(c => c.Subject)
-                .Include(sc => sc.Course)
-                .ThenInclude(c => c.Lecturer)
-                .ThenInclude(l => l.User)
-                .Include(sc => sc.Course)
-                .ThenInclude(c => c.Semester)
-                .Select(sc => sc.Course)
+                .Select(sc => sc.CourseId)
+                .ToListAsync();
+
+            var courses = await _context.Courses
+                .Where(c => courseIds.Contains(c.CourseId))
+                .Include(c => c.Subject)
+                .Include(c => c.Lecturer)
+                    .ThenInclude(l => l.User)
+                .Include(c => c.Semester)
+                .Include(c => c.Major)
                 .ToListAsync();
 
             return View(courses);
+        }
+
+        public async Task<IActionResult> CourseDetails(int courseId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || !string.Equals(user.Role, "student", StringComparison.OrdinalIgnoreCase))
+            {
+                return Forbid();
+            }
+
+            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            // Check if student is enrolled in this course
+            var isEnrolled = await _context.StudentCourses
+                .AnyAsync(sc => sc.StudentId == student.StudentId && sc.CourseId == courseId);
+
+            if (!isEnrolled)
+            {
+                TempData["Error"] = "You are not enrolled in this course.";
+                return RedirectToAction("MyCourses");
+            }
+
+            // Get course details
+            var course = await _context.Courses
+                .Include(c => c.Subject)
+                .Include(c => c.Lecturer)
+                    .ThenInclude(l => l.User)
+                .Include(c => c.Semester)
+                .Include(c => c.Major)
+                .FirstOrDefaultAsync(c => c.CourseId == courseId);
+
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            // Get enrolled students
+            var enrolledStudents = await _context.StudentCourses
+                .Where(sc => sc.CourseId == courseId)
+                .Include(sc => sc.Student)
+                    .ThenInclude(s => s.User)
+                .Include(sc => sc.Student)
+                    .ThenInclude(s => s.Major)
+                .Select(sc => sc.Student)
+                .ToListAsync();
+
+            // Pagination
+            int page = 1;
+            int pageSize = 10;
+            var queryString = HttpContext.Request.QueryString.ToString();
+            if (!string.IsNullOrEmpty(queryString))
+            {
+                var pageParam = HttpContext.Request.Query["page"].ToString();
+                if (!string.IsNullOrEmpty(pageParam) && int.TryParse(pageParam, out int p))
+                {
+                    page = p;
+                }
+            }
+
+            var totalStudents = enrolledStudents.Count;
+            var pagedStudents = enrolledStudents.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.Course = course;
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalStudents / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "CourseDetails";
+            ViewBag.Controller = "Student";
+            ViewBag.RouteValues = new Dictionary<string, object> { { "courseId", courseId } };
+
+            return View(pagedStudents);
         }
 
         public async Task<IActionResult> ViewProfile()
@@ -65,88 +143,8 @@ namespace SIMS.Controllers
             return View(user);
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Register()
-        {
-            if (User.Identity!.IsAuthenticated)
-            {
-                return RedirectToAction("Dashboard", "Home");
-            }
 
-            ViewBag.Majors = await _context.Majors.Include(m => m.Department).ToListAsync();
-            return View();
-        }
 
-        public async Task<IActionResult> AvailableCourses()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || user.Role != "student")
-            {
-                return Forbid();
-            }
 
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
-            if (student == null)
-            {
-                return NotFound();
-            }
-
-            // Get enrolled course IDs
-            var enrolledCourseIds = await _context.StudentCourses
-                .Where(sc => sc.StudentId == student.StudentId)
-                .Select(sc => sc.CourseId)
-                .ToListAsync();
-
-            // Get available courses for the student's major
-            var availableCourses = await _context.Courses
-                .Where(c => c.MajorId == student.MajorId && !enrolledCourseIds.Contains(c.CourseId))
-                .Include(c => c.Subject)
-                .Include(c => c.Lecturer)
-                .ThenInclude(l => l.User)
-                .Include(c => c.Semester)
-                .ToListAsync();
-
-            return View(availableCourses);
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EnrollInCourse(int courseId)
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null || user.Role != "student")
-            {
-                return Forbid();
-            }
-
-            var student = await _context.Students.FirstOrDefaultAsync(s => s.UserId == user.Id);
-            if (student == null)
-            {
-                return NotFound();
-            }
-
-            // Check if already enrolled
-            var existing = await _context.StudentCourses
-                .FirstOrDefaultAsync(sc => sc.StudentId == student.StudentId && sc.CourseId == courseId);
-
-            if (existing == null)
-            {
-                var studentCourse = new StudentCourse
-                {
-                    StudentId = student.StudentId,
-                    CourseId = courseId
-                };
-
-                _context.StudentCourses.Add(studentCourse);
-                await _context.SaveChangesAsync();
-                
-                TempData["Success"] = "Successfully enrolled in the course!";
-            }
-            else
-            {
-                TempData["Error"] = "You are already enrolled in this course.";
-            }
-
-            return RedirectToAction("AvailableCourses");
-        }
     }
 }

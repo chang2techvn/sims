@@ -1,0 +1,56 @@
+@model dynamic
+
+@{
+    string id = ViewBag.Id ?? "dropdown";
+    string name = ViewBag.Name ?? "dropdown";
+    string placeholder = ViewBag.Placeholder ?? "Search and select...";
+    string label = ViewBag.Label ?? "";
+    string icon = ViewBag.Icon ?? "";
+    var items = ViewBag.Items as IEnumerable<dynamic> ?? new List<dynamic>();
+}
+
+@if (!string.IsNullOrEmpty(label))
+{
+    <div class="form-group">
+        <label class="form-label">
+            @if (!string.IsNullOrEmpty(icon))
+            {
+                <i class="@icon"></i>
+            }
+            @label
+        </label>
+        <div class="position-relative">
+            <input type="text" id="@id" class="form-control searchable-dropdown-input" placeholder="@placeholder" autocomplete="off" required style="padding-right: 40px;">
+            <span class="position-absolute dropdown-arrow" style="right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6c757d;">
+                <i class="fas fa-chevron-down"></i>
+            </span>
+            <input type="hidden" name="@name" id="@(id)Id" required>
+            <div id="@(id)Dropdown" class="dropdown-menu searchable-dropdown-menu" style="position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; z-index: 1000;">
+                @foreach (var item in items)
+                {
+                    <a class="dropdown-item dropdown-option" href="#" data-id="@item.Id" data-name="@item.Name">
+                        @item.Name
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="position-relative">
+        <input type="text" id="@id" class="form-control searchable-dropdown-input" placeholder="@placeholder" autocomplete="off" required style="padding-right: 40px;">
+        <span class="position-absolute dropdown-arrow" style="right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6c757d;">
+            <i class="fas fa-chevron-down"></i>
+        </span>
+        <input type="hidden" name="@name" id="@(id)Id" required>
+        <div id="@(id)Dropdown" class="dropdown-menu searchable-dropdown-menu" style="position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; z-index: 1000;">
+            @foreach (var item in items)
+            {
+                <a class="dropdown-item dropdown-option" href="#" data-id="@item.Id" data-name="@item.Name">
+                    @item.Name
+                </a>
+            }
+        </div>
+    </div>
+}

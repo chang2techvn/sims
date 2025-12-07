@@ -21,8 +21,12 @@ $(document).ready(function () {
     
     // Smooth scrolling for anchor links
     $('a[href^="#"]').on('click', function(e) {
+        var href = this.getAttribute('href');
+        if (href === '#' || href === '') {
+            return; // Skip smooth scrolling for empty or just "#" hrefs
+        }
         e.preventDefault();
-        var target = $(this.getAttribute('href'));
+        var target = $(href);
         if (target.length) {
             $('html, body').stop().animate({
                 scrollTop: target.offset().top - 100

@@ -38,10 +38,19 @@ namespace SIMS.Controllers
         }
 
         // Manage Departments
-        public async Task<IActionResult> ManageDepartments()
+        public async Task<IActionResult> ManageDepartments(int page = 1, int pageSize = 10)
         {
             var departments = await _context.Departments.ToListAsync();
-            return View(departments);
+            var totalDepartments = departments.Count;
+            var pagedDepartments = departments.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalDepartments / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "ManageDepartments";
+            ViewBag.Controller = "Admin";
+
+            return View(pagedDepartments);
         }
 
         [HttpPost]
@@ -98,11 +107,20 @@ namespace SIMS.Controllers
         }
 
         // Manage Majors
-        public async Task<IActionResult> ManageMajors()
+        public async Task<IActionResult> ManageMajors(int page = 1, int pageSize = 10)
         {
             var majors = await _context.Majors.Include(m => m.Department).ToListAsync();
+            var totalMajors = majors.Count;
+            var pagedMajors = majors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
             ViewBag.Departments = await _context.Departments.ToListAsync();
-            return View(majors);
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalMajors / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "ManageMajors";
+            ViewBag.Controller = "Admin";
+
+            return View(pagedMajors);
         }
 
         [HttpPost]
@@ -242,10 +260,19 @@ namespace SIMS.Controllers
         }
 
         // Manage Semesters
-        public async Task<IActionResult> ManageSemesters()
+        public async Task<IActionResult> ManageSemesters(int page = 1, int pageSize = 10)
         {
             var semesters = await _context.Semesters.ToListAsync();
-            return View(semesters);
+            var totalSemesters = semesters.Count;
+            var pagedSemesters = semesters.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalSemesters / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "ManageSemesters";
+            ViewBag.Controller = "Admin";
+
+            return View(pagedSemesters);
         }
 
         [HttpPost]
@@ -254,13 +281,16 @@ namespace SIMS.Controllers
         {
             try
             {
+                Console.WriteLine($"CreateSemesterAjax called with name: {name}, year: {year}");
                 var semester = new Semester { Name = name, Year = year };
                 _context.Semesters.Add(semester);
                 await _context.SaveChangesAsync();
+                Console.WriteLine("Semester created successfully");
                 return Json(new { success = true, message = "Semester created successfully!" });
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error creating semester: {ex.Message}");
                 return Json(new { success = false, message = "Error: " + ex.Message });
             }
         }
@@ -326,10 +356,19 @@ namespace SIMS.Controllers
         }
 
         // Manage Subjects
-        public async Task<IActionResult> ManageSubjects()
+        public async Task<IActionResult> ManageSubjects(int page = 1, int pageSize = 10)
         {
             var subjects = await _context.Subjects.ToListAsync();
-            return View(subjects);
+            var totalSubjects = subjects.Count;
+            var pagedSubjects = subjects.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalSubjects / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "ManageSubjects";
+            ViewBag.Controller = "Admin";
+
+            return View(pagedSubjects);
         }
 
         [HttpPost]
@@ -397,7 +436,7 @@ namespace SIMS.Controllers
         }
 
         // Manage Courses
-        public async Task<IActionResult> ManageCourses()
+        public async Task<IActionResult> ManageCourses(int page = 1, int pageSize = 10)
         {
             var courses = await _context.Courses
                 .Include(c => c.Subject)
@@ -406,13 +445,22 @@ namespace SIMS.Controllers
                 .Include(c => c.Lecturer)
                 .ThenInclude(l => l.User)
                 .ToListAsync();
+
+            var totalCourses = courses.Count;
+            var pagedCourses = courses.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             
             ViewBag.Subjects = await _context.Subjects.ToListAsync();
             ViewBag.Semesters = await _context.Semesters.ToListAsync();
             ViewBag.Majors = await _context.Majors.ToListAsync();
             ViewBag.Lecturers = await _context.Lecturers.Include(l => l.User).ToListAsync();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalCourses / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "ManageCourses";
+            ViewBag.Controller = "Admin";
             
-            return View(courses);
+            return View(pagedCourses);
         }
 
         [HttpPost]
@@ -580,10 +628,19 @@ namespace SIMS.Controllers
         }
 
         // Manage Users
-        public async Task<IActionResult> ManageUsers()
+        public async Task<IActionResult> ManageUsers(int page = 1, int pageSize = 10)
         {
             var users = await base._userManager.Users.ToListAsync();
-            return View(users);
+            var totalUsers = users.Count;
+            var pagedUsers = users.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalUsers / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "ManageUsers";
+            ViewBag.Controller = "Admin";
+
+            return View(pagedUsers);
         }
 
         [HttpPost]
@@ -1014,7 +1071,7 @@ namespace SIMS.Controllers
         }
 
         // Assign Students to Courses
-        public async Task<IActionResult> AssignStudentToCourse()
+        public async Task<IActionResult> AssignStudentToCourse(int page = 1, int pageSize = 10)
         {
             ViewBag.Students = await _context.Students
                 .Include(s => s.User)
@@ -1024,20 +1081,29 @@ namespace SIMS.Controllers
                 .Include(c => c.Subject)
                 .Include(c => c.Major)
                 .ToListAsync();
-            
+
             var assignments = await _context.StudentCourses
                 .Include(sc => sc.Student)
                 .ThenInclude(s => s.User)
                 .Include(sc => sc.Course)
                 .ThenInclude(c => c.Subject)
                 .ToListAsync();
-            
-            return View(assignments);
+
+            var totalAssignments = assignments.Count;
+            var pagedAssignments = assignments.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalAssignments / pageSize);
+            ViewBag.PageSize = pageSize;
+            ViewBag.Action = "AssignStudentToCourse";
+            ViewBag.Controller = "Admin";
+
+            return View(pagedAssignments);
         }
 
         [HttpPost]
         [IgnoreAntiforgeryToken]
-        public async Task<IActionResult> AssignStudentToCourse(int studentId, int courseId)
+        public async Task<IActionResult> AssignStudentToCoursePost(int studentId, int courseId)
         {
             try
             {

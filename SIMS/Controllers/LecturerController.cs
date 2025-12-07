@@ -94,8 +94,31 @@ namespace SIMS.Controllers
                     .Select(sc => sc.Student)
                     .ToListAsync();
 
+                // Pagination
+                int page = 1;
+                int pageSize = 10;
+                var queryString = HttpContext.Request.QueryString.ToString();
+                if (!string.IsNullOrEmpty(queryString))
+                {
+                    var pageParam = HttpContext.Request.Query["page"].ToString();
+                    if (!string.IsNullOrEmpty(pageParam) && int.TryParse(pageParam, out int p))
+                    {
+                        page = p;
+                    }
+                }
+
+                var totalStudents = students.Count;
+                var pagedStudents = students.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
                 ViewBag.Course = course;
-                return View(students);
+                ViewBag.CurrentPage = page;
+                ViewBag.TotalPages = (int)Math.Ceiling((double)totalStudents / pageSize);
+                ViewBag.PageSize = pageSize;
+                ViewBag.Action = "CourseStudents";
+                ViewBag.Controller = "Lecturer";
+                ViewBag.RouteValues = new Dictionary<string, object> { { "courseId", courseId } };
+
+                return View(pagedStudents);
             }
             catch (Exception ex)
             {

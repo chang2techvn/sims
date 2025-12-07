@@ -7,7 +7,7 @@
     <div class="col-lg-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Majors List</h5>
+                <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Students In Course List</h5>
                 <div class="search-box">
                     <i class="fas fa-search search-icon"></i>
                     <input type="text" id="assignmentSearchInput" class="form-control search-input" placeholder="Search assignments...">
@@ -32,13 +32,22 @@
                                 @{ int counter = 1; }
                                 @foreach (var assignment in Model)
                                 {
+                                    // Define color palette for courses
+                                    string[] courseColors = { "#e3f2fd", "#f3e5f5", "#e8f5e8", "#fff3e0", "#fce4ec", "#e0f2f1", "#f1f8e9", "#ede7f6" };
+                                    int colorIndex = assignment.CourseId % courseColors.Length;
+                                    string courseBgColor = courseColors[colorIndex];
+                                    
                                     <tr>
                                         <td>@counter</td>
                                         <td>
                                             <strong>@assignment.Student.User.Name</strong>
                                             <br><small class="text-muted">@assignment.Student.User.Email</small>
                                         </td>
-                                        <td>@assignment.Course.CourseName</td>
+                                        <td>
+                                            <span class="badge" style="background-color: @courseBgColor; color: #333; padding: 4px 8px; border-radius: 4px; font-weight: 500;">
+                                                @assignment.Course.CourseName
+                                            </span>
+                                        </td>
                                         <td>
                                             @assignment.Course.Subject.Name
                                             <br><small class="text-muted">@assignment.Course.Subject.Code</small>
@@ -59,6 +68,7 @@
                             </tbody>
                         </table>
                     </div>
+                    @Html.Partial("_Pagination")
                 }
                 else
                 {
@@ -78,34 +88,29 @@
             </div>
             <div class="card-body">
                 <form id="assignForm" method="post">
-                    <div class="form-group">
-                        <label class="form-label">
-                            <i class="fas fa-user-graduate"></i> Select Student
-                        </label>
-                        <select name="studentId" class="form-select" required>
-                            <option value="">Choose Student</option>
-                            @foreach (var student in ViewBag.Students as List<SIMS.Models.Student>)
-                            {
-                                <option value="@student.StudentId">
-                                    @student.User.Name (@student.Major.Name)
-                                </option>
-                            }
-                        </select>
-                    </div>
+                    @{
+                        ViewBag.Id = "studentSearch";
+                        ViewBag.Name = "studentId";
+                        ViewBag.Placeholder = "Search and select student...";
+                        ViewBag.Label = "Select Student";
+                        ViewBag.Icon = "fas fa-user-graduate";
+                        ViewBag.Items = (ViewBag.Students as List<SIMS.Models.Student>)?.Select(s => new { Id = s.StudentId, Name = s.User.Name + " (" + s.Major.Name + ")" });
+                    }
+                    @Html.Partial("_SearchableDropdown")
                     
                     <div class="form-group">
                         <label class="form-label">
                             <i class="fas fa-book"></i> Select Course
                         </label>
-                        <select name="courseId" class="form-select" required>
-                            <option value="">Choose Course</option>
-                            @foreach (var course in ViewBag.Courses as List<SIMS.Models.Course>)
-                            {
-                                <option value="@course.CourseId">
-                                    @course.CourseName
-                                </option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "courseSearch";
+                            ViewBag.Name = "courseId";
+                            ViewBag.Placeholder = "Search and select course...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Courses as List<SIMS.Models.Course>)?.Select(c => new { Id = c.CourseId, Name = c.CourseName });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <button type="button" class="btn btn-primary w-100" onclick="assignStudent()">
@@ -233,7 +238,7 @@
             const form = document.getElementById('assignForm');
             const formData = new FormData(form);
 
-            fetch('@Url.Action("AssignStudentToCourse", "Admin")', {
+            fetch('@Url.Action("AssignStudentToCoursePost", "Admin")', {
                 method: 'POST',
                 body: formData
             })
@@ -284,6 +289,52 @@ $('#assignmentSearchInput').on('keyup', function() {
         }
     } else {
         $('#noResultsMessage').remove();
+    }
+});
+
+$('.select2').select2({
+    placeholder: "Search for a student...",
+    allowClear: true,
+    minimumResultsForSearch: 0
+});
+
+// Searchable dropdown
+$('.searchable-dropdown-input').on('focus', function() {
+    // Hide all dropdowns first
+    $('.searchable-dropdown-menu').hide();
+    // Show the corresponding dropdown
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId).show();
+});
+
+$('.searchable-dropdown-input').on('input', function() {
+    var query = $(this).val().toLowerCase();
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId + ' .dropdown-option').each(function() {
+        var text = $(this).text().toLowerCase();
+        if (text.includes(query)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+});
+
+$('.dropdown-option').on('click', function(e) {
+    e.preventDefault();
+    var id = $(this).data('id');
+    var name = $(this).data('name');
+    var input = $(this).closest('.position-relative').find('.searchable-dropdown-input');
+    var hidden = $(this).closest('.position-relative').find('input[type="hidden"]');
+    input.val(name);
+    hidden.val(id);
+    $(this).closest('.dropdown-menu').hide();
+});
+
+// Hide dropdown when click outside
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.searchable-dropdown-menu').hide();
     }
 });
     </script>

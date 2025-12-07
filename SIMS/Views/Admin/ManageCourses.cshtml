@@ -74,6 +74,7 @@
                         </tbody>
                     </table>
                 </div>
+                @Html.Partial("_Pagination")
             </div>
         </div>
     </div>
@@ -92,46 +93,54 @@
                     
                     <div class="form-group">
                         <label class="form-label">Subject</label>
-                        <select name="SubjectId" id="createSubjectId" class="form-select" required>
-                            <option value="">Select Subject</option>
-                            @foreach (var subject in ViewBag.Subjects as List<SIMS.Models.Subject>)
-                            {
-                                <option value="@subject.SubjectId">@subject.Name (@subject.Code)</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "createSubject";
+                            ViewBag.Name = "SubjectId";
+                            ViewBag.Placeholder = "Search and select subject...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Subjects as List<SIMS.Models.Subject>)?.Select(s => new { Id = s.SubjectId, Name = s.Name + " (" + s.Code + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Semester</label>
-                        <select name="SemesterId" id="createSemesterId" class="form-select" required>
-                            <option value="">Select Semester</option>
-                            @foreach (var semester in ViewBag.Semesters as List<SIMS.Models.Semester>)
-                            {
-                                <option value="@semester.SemesterId">@semester.Name @semester.Year</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "createSemester";
+                            ViewBag.Name = "SemesterId";
+                            ViewBag.Placeholder = "Search and select semester...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Semesters as List<SIMS.Models.Semester>)?.Select(s => new { Id = s.SemesterId, Name = s.Name + " (" + s.Year + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Major</label>
-                        <select name="MajorId" id="createMajorId" class="form-select" required>
-                            <option value="">Select Major</option>
-                            @foreach (var major in ViewBag.Majors as List<SIMS.Models.Major>)
-                            {
-                                <option value="@major.MajorId">@major.Name</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "createMajor";
+                            ViewBag.Name = "MajorId";
+                            ViewBag.Placeholder = "Search and select major...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Majors as List<SIMS.Models.Major>)?.Select(m => new { Id = m.MajorId, Name = m.Name });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Lecturer</label>
-                        <select name="LecturerId" id="createLecturerId" class="form-select" required>
-                            <option value="">Select Lecturer</option>
-                            @foreach (var lecturer in ViewBag.Lecturers as List<SIMS.Models.Lecturer>)
-                            {
-                                <option value="@lecturer.LecturerId">@lecturer.User.Name</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "createLecturer";
+                            ViewBag.Name = "LecturerId";
+                            ViewBag.Placeholder = "Search and select lecturer...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Lecturers as List<SIMS.Models.Lecturer>)?.Select(l => new { Id = l.LecturerId, Name = l.User.Name + " (" + l.User.Email + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100">
@@ -162,46 +171,54 @@
                     
                     <div class="form-group mb-3">
                         <label class="form-label">Subject</label>
-                        <select id="editSubjectId" class="form-select" required>
-                            <option value="">Select Subject</option>
-                            @foreach (var subject in ViewBag.Subjects as List<SIMS.Models.Subject>)
-                            {
-                                <option value="@subject.SubjectId">@subject.Name (@subject.Code)</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "editSubject";
+                            ViewBag.Name = "editSubjectId";
+                            ViewBag.Placeholder = "Search and select subject...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Subjects as List<SIMS.Models.Subject>)?.Select(s => new { Id = s.SubjectId, Name = s.Name + " (" + s.Code + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <div class="form-group mb-3">
                         <label class="form-label">Semester</label>
-                        <select id="editSemesterId" class="form-select" required>
-                            <option value="">Select Semester</option>
-                            @foreach (var semester in ViewBag.Semesters as List<SIMS.Models.Semester>)
-                            {
-                                <option value="@semester.SemesterId">@semester.Name @semester.Year</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "editSemester";
+                            ViewBag.Name = "editSemesterId";
+                            ViewBag.Placeholder = "Search and select semester...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Semesters as List<SIMS.Models.Semester>)?.Select(s => new { Id = s.SemesterId, Name = s.Name + " (" + s.Year + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <div class="form-group mb-3">
                         <label class="form-label">Major</label>
-                        <select id="editMajorId" class="form-select" required>
-                            <option value="">Select Major</option>
-                            @foreach (var major in ViewBag.Majors as List<SIMS.Models.Major>)
-                            {
-                                <option value="@major.MajorId">@major.Name</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "editMajor";
+                            ViewBag.Name = "editMajorId";
+                            ViewBag.Placeholder = "Search and select major...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Majors as List<SIMS.Models.Major>)?.Select(m => new { Id = m.MajorId, Name = m.Name });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <div class="form-group mb-3">
                         <label class="form-label">Lecturer</label>
-                        <select id="editLecturerId" class="form-select" required>
-                            <option value="">Select Lecturer</option>
-                            @foreach (var lecturer in ViewBag.Lecturers as List<SIMS.Models.Lecturer>)
-                            {
-                                <option value="@lecturer.LecturerId">@lecturer.User!.Name</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "editLecturer";
+                            ViewBag.Name = "editLecturerId";
+                            ViewBag.Placeholder = "Search and select lecturer...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Lecturers as List<SIMS.Models.Lecturer>)?.Select(l => new { Id = l.LecturerId, Name = l.User.Name + " (" + l.User.Email + ")" });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                 </form>
             </div>
@@ -354,10 +371,34 @@
     function editCourse(id, name, subjectId, semesterId, majorId, lecturerId) {
         $('#editCourseId').val(id);
         $('#editCourseName').val(name);
+        
+        // Set subject dropdown
         $('#editSubjectId').val(subjectId);
+        const subjectOption = $('#editSubjectDropdown .dropdown-option[data-id="' + subjectId + '"]');
+        if (subjectOption.length > 0) {
+            $('#editSubject').val(subjectOption.attr('data-name'));
+        }
+        
+        // Set semester dropdown
         $('#editSemesterId').val(semesterId);
+        const semesterOption = $('#editSemesterDropdown .dropdown-option[data-id="' + semesterId + '"]');
+        if (semesterOption.length > 0) {
+            $('#editSemester').val(semesterOption.attr('data-name'));
+        }
+        
+        // Set major dropdown
         $('#editMajorId').val(majorId);
+        const majorOption = $('#editMajorDropdown .dropdown-option[data-id="' + majorId + '"]');
+        if (majorOption.length > 0) {
+            $('#editMajor').val(majorOption.attr('data-name'));
+        }
+        
+        // Set lecturer dropdown
         $('#editLecturerId').val(lecturerId);
+        const lecturerOption = $('#editLecturerDropdown .dropdown-option[data-id="' + lecturerId + '"]');
+        if (lecturerOption.length > 0) {
+            $('#editLecturer').val(lecturerOption.attr('data-name'));
+        }
         
         $('#editCourseModal').modal('show');
     }
@@ -646,5 +687,45 @@
             $('#noResultsMessage').remove();
         }
     }
+
+// Searchable dropdown functionality
+$('.searchable-dropdown-input').on('focus', function() {
+    // Hide all dropdowns first
+    $('.searchable-dropdown-menu').hide();
+    // Show the corresponding dropdown
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId).show();
+});
+
+$('.searchable-dropdown-input').on('input', function() {
+    var query = $(this).val().toLowerCase();
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId + ' .dropdown-option').each(function() {
+        var text = $(this).text().toLowerCase();
+        if (text.includes(query)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+});
+
+$('.dropdown-option').on('click', function(e) {
+    e.preventDefault();
+    var id = $(this).data('id');
+    var name = $(this).data('name');
+    var input = $(this).closest('.position-relative').find('.searchable-dropdown-input');
+    var hidden = $(this).closest('.position-relative').find('input[type="hidden"]');
+    input.val(name);
+    hidden.val(id);
+    $(this).closest('.dropdown-menu').hide();
+});
+
+// Hide dropdown when click outside
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.searchable-dropdown-menu').hide();
+    }
+});
 </script>
 }

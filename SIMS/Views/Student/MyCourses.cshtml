@@ -4,7 +4,7 @@
 }
 
 <div class="row">
-    @if (Model.Any())
+    @if (Model != null && Model.Any())
     {
         @foreach (var course in Model)
         {
@@ -13,9 +13,9 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h6 class="mb-0">
                             <i class="fas fa-book text-primary"></i>
-                            @course.Subject.Name
+                            @((course.Subject?.Name) ?? "N/A")
                         </h6>
-                        <span class="badge bg-primary">@course.Subject.Code</span>
+                        <span class="badge bg-primary">@((course.Subject?.Code) ?? "N/A")</span>
                     </div>
                     <div class="card-body">
                         <h5 class="card-title">@course.CourseName</h5>
@@ -23,27 +23,24 @@
                         <div class="course-details">
                             <p class="mb-2">
                                 <i class="fas fa-chalkboard-teacher text-success"></i>
-                                <strong>Lecturer:</strong> @course.Lecturer.User.Name
+                                <strong>Lecturer:</strong> @((course.Lecturer?.User?.Name) ?? "TBA")
                             </p>
                             
                             <p class="mb-2">
                                 <i class="fas fa-calendar-alt text-info"></i>
-                                <strong>Semester:</strong> @course.Semester.Name @course.Semester.Year
+                                <strong>Semester:</strong> @((course.Semester?.Name) ?? "N/A") @((course.Semester?.Year)?.ToString() ?? "")
                             </p>
                             
                             <p class="mb-3">
                                 <i class="fas fa-graduation-cap text-warning"></i>
-                                <strong>Major:</strong> @course.Major.Name
+                                <strong>Major:</strong> @((course.Major?.Name) ?? "N/A")
                             </p>
                         </div>
                         
                         <div class="d-flex gap-2">
-                            <button class="btn btn-primary btn-sm">
+                            <a href="@Url.Action("CourseDetails", "Student", new { courseId = course.CourseId })" class="btn btn-primary btn-sm">
                                 <i class="fas fa-eye"></i> View Details
-                            </button>
-                            <button class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-download"></i> Materials
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -58,46 +55,11 @@
                     <i class="fas fa-book-open text-muted" style="font-size: 4rem;"></i>
                     <h4 class="mt-3 text-muted">No Courses Enrolled</h4>
                     <p class="text-muted">You haven't enrolled in any courses yet. Browse available courses to get started.</p>
-                    <a href="@Url.Action("AvailableCourses", "Student")" class="btn btn-primary">
-                        <i class="fas fa-search"></i> Browse Available Courses
+                    <a href="@Url.Action("MyCourses", "Student")" class="btn btn-primary">
+                        <i class="fas fa-book"></i> View My Courses
                     </a>
                 </div>
             </div>
         </div>
     }
 </div>
-
-@if (Model.Any())
-{
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5><i class="fas fa-chart-bar"></i> Course Statistics</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h3 class="text-primary">@Model.Count()</h3>
-                                <p class="text-muted">Total Enrolled</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h3 class="text-success">@Model.Select(c => c.Semester).Distinct().Count()</h3>
-                                <p class="text-muted">Semesters</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="stat-item">
-                                <h3 class="text-warning">@Model.Select(c => c.Lecturer).Distinct().Count()</h3>
-                                <p class="text-muted">Lecturers</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}

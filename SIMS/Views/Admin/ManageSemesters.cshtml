@@ -7,7 +7,7 @@
     <div class="col-lg-8">
         <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0"><i class="fas fa-graduation-cap"></i> Majors List</h5>
+                    <h5 class="mb-0"><i class="fas fa-graduation-cap"></i>Semesters List</h5>
                     <div class="search-box">
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" id="semesterSearchInput" class="form-control search-input" placeholder="Search semesters...">
@@ -52,6 +52,7 @@
                             </tbody>
                         </table>
                     </div>
+                    @Html.Partial("_Pagination")
                 }
                 else
                 {
@@ -75,13 +76,19 @@
                         <label class="form-label">
                             <i class="fas fa-calendar"></i> Semester Name
                         </label>
-                        <select name="name" id="createSemesterName" class="form-select" required>
-                            <option value="">Select Semester</option>
-                            <option value="Spring">Spring</option>
-                            <option value="Summer">Summer</option>
-                            <option value="Fall">Fall</option>
-                            <option value="Winter">Winter</option>
-                        </select>
+                        <div class="position-relative">
+                            <input type="text" id="createSemester" class="form-control searchable-dropdown-input" placeholder="Search and select semester..." autocomplete="off" required style="padding-right: 40px;">
+                            <span class="position-absolute dropdown-arrow" style="right: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6c757d;">
+                                <i class="fas fa-chevron-down"></i>
+                            </span>
+                            <input type="hidden" name="name" id="createSemesterId" required>
+                            <div id="createSemesterDropdown" class="dropdown-menu searchable-dropdown-menu" style="position: absolute; top: 100%; left: 0; width: 100%; max-height: 200px; overflow-y: auto; z-index: 1000;">
+                                <a class="dropdown-item dropdown-option" href="#" data-id="Spring" data-name="Spring">Spring</a>
+                                <a class="dropdown-item dropdown-option" href="#" data-id="Summer" data-name="Summer">Summer</a>
+                                <a class="dropdown-item dropdown-option" href="#" data-id="Fall" data-name="Fall">Fall</a>
+                                <a class="dropdown-item dropdown-option" href="#" data-id="Winter" data-name="Winter">Winter</a>
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -92,7 +99,7 @@
                                min="2020" max="2030" value="@DateTime.Now.Year" required />
                     </div>
                     
-                    <button type="button" class="btn btn-primary w-100" onclick="createSemester()">
+                    <button type="button" class="btn btn-primary w-100" id="createSemesterBtn">
                         <i class="fas fa-plus"></i> Add Semester
                     </button>
                 </form>
@@ -174,8 +181,23 @@
 
 @section Scripts {
     <script>
+        console.log('ManageSemesters script loaded');
+        
+        // Test if createSemester function exists
+        window.testCreateSemester = function() {
+            console.log('testCreateSemester called');
+            if (typeof createSemester === 'function') {
+                console.log('createSemester function exists');
+            } else {
+                console.log('createSemester function does not exist');
+            }
+        };
+        
+        console.log('About to define showToast function');
+        
         // Toast notifications
         function showToast(message, type = 'info') {
+            console.log('showToast function called with:', message, type);
             var toastHtml = `
                 <div class="toast align-items-center text-white bg-${type} border-0" role="alert">
                     <div class="d-flex">
@@ -204,42 +226,63 @@
             });
         }
 
+        console.log('About to define semester management variables');
+        
         // Delete Semester
         let deleteSemesterId = null;
         let deleteSemesterName = null;
 
+        console.log('About to define editSemester function');
+        
         function editSemester(id, name, year) {
+            console.log('editSemester called with:', id, name, year);
             document.getElementById('editSemesterId').value = id;
             document.getElementById('editSemesterName').value = name;
             document.getElementById('editSemesterYear').value = year;
             new bootstrap.Modal(document.getElementById('editSemesterModal')).show();
         }
 
+        console.log('About to define deleteSemester function');
+        
         function deleteSemester(id, name) {
+            console.log('deleteSemester called with:', id, name);
             deleteSemesterId = id;
             deleteSemesterName = name;
             document.getElementById('deleteSemesterName').textContent = name;
             new bootstrap.Modal(document.getElementById('deleteSemesterModal')).show();
         }
 
+        console.log('About to define createSemester function');
+        
         function createSemester() {
-            const name = document.getElementById('createSemesterName').value;
+            console.log('createSemester function called');
+            const name = document.getElementById('createSemesterId').value;
             const year = document.getElementById('createSemesterYear').value;
-            if (!name || !year) return;
+            
+            console.log('createSemester - name:', name, 'year:', year);
+            
+            if (!name || !year) {
+                console.log('createSemester - missing name or year, returning');
+                return;
+            }
 
             const formData = new FormData();
             formData.append('name', name);
             formData.append('year', year);
 
+            console.log('createSemester - sending fetch request');
+            
             fetch('@Url.Action("CreateSemesterAjax", "Admin")', {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
+                console.log('createSemester - response received:', data);
                 if (data.success) {
                     showToast(data.message, 'success');
                     document.getElementById('createSemesterForm').reset();
+                    document.getElementById('createSemester').value = ''; // Clear the visible dropdown input
                     setTimeout(() => location.reload(), 1000);
                 } else {
                     showToast(data.message, 'danger');
@@ -250,6 +293,8 @@
                 showToast('An error occurred while creating the semester.', 'error');
             });
         }
+
+        console.log('createSemester function defined, type:', typeof createSemester);
 
         function confirmDeleteSemester() {
             if (!deleteSemesterId) return;
@@ -317,7 +362,7 @@
                 console.error('Error:', error);
                 showToast('An error occurred while updating the semester.', 'error');
             });
-        });
+        }
 
 // Search Semesters Function
 $('#semesterSearchInput').on('keyup', function() {
@@ -352,5 +397,54 @@ $('#semesterSearchInput').on('keyup', function() {
         $('#noResultsMessage').remove();
     }
 });
-    </script>
+
+// Searchable dropdown functionality
+$('.searchable-dropdown-input').on('focus', function() {
+    // Hide all dropdowns first
+    $('.searchable-dropdown-menu').hide();
+    // Show the corresponding dropdown
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId).show();
+});
+
+$('.searchable-dropdown-input').on('input', function() {
+    var query = $(this).val().toLowerCase();
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId + ' .dropdown-option').each(function() {
+        var text = $(this).text().toLowerCase();
+        if (text.includes(query)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+});
+
+$('.dropdown-option').on('click', function(e) {
+    e.preventDefault();
+    var id = $(this).data('id');
+    var name = $(this).data('name');
+    var input = $(this).closest('.position-relative').find('.searchable-dropdown-input');
+    var hidden = $(this).closest('.position-relative').find('input[type="hidden"]');
+    input.val(name);
+    hidden.val(id);
+    $(this).closest('.dropdown-menu').hide();
+});
+
+// Hide dropdown when click outside
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.searchable-dropdown-menu').hide();
+    }
+});
+
+// Bind create semester button click event
+$(document).ready(function() {
+    console.log('Binding create semester button event');
+    $('#createSemesterBtn').on('click', function() {
+        console.log('Create semester button clicked');
+        createSemester();
+    });
+});
+</script>
 }

@@ -50,6 +50,7 @@
                             </tbody>
                         </table>
                     </div>
+                    @Html.Partial("_Pagination")
                 }
                 else
                 {
@@ -80,13 +81,15 @@
                         <label class="form-label">
                             <i class="fas fa-building"></i> Department
                         </label>
-                        <select name="DepartmentId" class="form-select" required>
-                            <option value="">Select Department</option>
-                            @foreach (var department in ViewBag.Departments as List<SIMS.Models.Department>)
-                            {
-                                <option value="@department.DepartmentId">@department.Name</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "createDepartment";
+                            ViewBag.Name = "DepartmentId";
+                            ViewBag.Placeholder = "Search and select department...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Departments as List<SIMS.Models.Department>)?.Select(d => new { Id = d.DepartmentId, Name = d.Name });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                     
                     <button type="submit" class="btn btn-primary w-100">
@@ -141,13 +144,15 @@
                         <label class="form-label">
                             <i class="fas fa-building"></i> Department
                         </label>
-                        <select id="editDepartmentId" name="DepartmentId" class="form-select" required>
-                            <option value="">Select Department</option>
-                            @foreach (var department in ViewBag.Departments as List<SIMS.Models.Department>)
-                            {
-                                <option value="@department.DepartmentId">@department.Name</option>
-                            }
-                        </select>
+                        @{
+                            ViewBag.Id = "editDepartment";
+                            ViewBag.Name = "DepartmentId";
+                            ViewBag.Placeholder = "Search and select department...";
+                            ViewBag.Label = "";
+                            ViewBag.Icon = "";
+                            ViewBag.Items = (ViewBag.Departments as List<SIMS.Models.Department>)?.Select(d => new { Id = d.DepartmentId, Name = d.Name });
+                        }
+                        @Html.Partial("_SearchableDropdown")
                     </div>
                 </form>
             </div>
@@ -217,7 +222,13 @@ function createMajor() {
 function editMajor(majorId, name, departmentId) {
     document.getElementById('editMajorId').value = majorId;
     document.getElementById('editMajorName').value = name;
-    document.getElementById('editDepartmentId').value = departmentId;
+    
+    // Set department dropdown
+    $('#editDepartmentId').val(departmentId);
+    const departmentOption = $('#editDepartmentDropdown .dropdown-option[data-id="' + departmentId + '"]');
+    if (departmentOption.length > 0) {
+        $('#editDepartment').val(departmentOption.attr('data-name'));
+    }
     
     const modal = new bootstrap.Modal(document.getElementById('editMajorModal'));
     modal.show();
@@ -345,6 +356,46 @@ $('#majorSearchInput').on('keyup', function() {
         }
     } else {
         $('#noResultsMessage').remove();
+    }
+});
+
+// Searchable dropdown functionality
+$('.searchable-dropdown-input').on('focus', function() {
+    // Hide all dropdowns first
+    $('.searchable-dropdown-menu').hide();
+    // Show the corresponding dropdown
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId).show();
+});
+
+$('.searchable-dropdown-input').on('input', function() {
+    var query = $(this).val().toLowerCase();
+    var dropdownId = $(this).attr('id') + 'Dropdown';
+    $('#' + dropdownId + ' .dropdown-option').each(function() {
+        var text = $(this).text().toLowerCase();
+        if (text.includes(query)) {
+            $(this).show();
+        } else {
+            $(this).hide();
+        }
+    });
+});
+
+$('.dropdown-option').on('click', function(e) {
+    e.preventDefault();
+    var id = $(this).data('id');
+    var name = $(this).data('name');
+    var input = $(this).closest('.position-relative').find('.searchable-dropdown-input');
+    var hidden = $(this).closest('.position-relative').find('input[type="hidden"]');
+    input.val(name);
+    hidden.val(id);
+    $(this).closest('.dropdown-menu').hide();
+});
+
+// Hide dropdown when click outside
+$(document).on('click', function(e) {
+    if (!$(e.target).closest('.position-relative').length) {
+        $('.searchable-dropdown-menu').hide();
     }
 });
 </script>

@@ -1,0 +1,146 @@
+@model dynamic
+
+@{
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int pageSize = ViewBag.PageSize ?? 10;
+    string action = ViewBag.Action ?? "Index";
+    string controller = ViewBag.Controller ?? "Home";
+    object routeValues = ViewBag.RouteValues ?? new Dictionary<string, object>();
+    
+    // Merge route values with pagination parameters
+    var prevRouteValues = new System.Dynamic.ExpandoObject();
+    var prevDict = (IDictionary<string, object>)prevRouteValues;
+    var routeDict = routeValues as IDictionary<string, object> ?? new Dictionary<string, object>();
+    foreach (var kvp in routeDict)
+    {
+        prevDict[kvp.Key] = kvp.Value;
+    }
+    prevDict["page"] = currentPage - 1;
+    prevDict["pageSize"] = pageSize;
+    
+    var nextRouteValues = new System.Dynamic.ExpandoObject();
+    var nextDict = (IDictionary<string, object>)nextRouteValues;
+    foreach (var kvp in routeDict)
+    {
+        nextDict[kvp.Key] = kvp.Value;
+    }
+    nextDict["page"] = currentPage + 1;
+    nextDict["pageSize"] = pageSize;
+}
+
+@if (totalPages > 1)
+{
+    <nav aria-label="Page navigation" style="margin-top: 20px;">
+        <ul class="pagination justify-content-center">
+            <!-- Previous -->
+            @if (currentPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@Url.Action(action, controller, prevRouteValues)" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+            }
+
+            <!-- Page Numbers -->
+            @{
+                var pageItems = new List<object>();
+                
+                if (totalPages <= 7)
+                {
+                    // Show all pages if 7 or less
+                    for (int i = 1; i <= totalPages; i++)
+                    {
+                        pageItems.Add(i);
+                    }
+                }
+                else
+                {
+                    // Show first page
+                    pageItems.Add(1);
+                    
+                    // Add ellipsis if gap after first
+                    if (currentPage > 4)
+                    {
+                        pageItems.Add("...");
+                    }
+                    
+                    // Show pages around current
+                    int start = Math.Max(2, currentPage - 1);
+                    int end = Math.Min(totalPages - 1, currentPage + 1);
+                    
+                    for (int i = start; i <= end; i++)
+                    {
+                        pageItems.Add(i);
+                    }
+                    
+                    // Add ellipsis if gap before last
+                    if (currentPage < totalPages - 3)
+                    {
+                        pageItems.Add("...");
+                    }
+                    
+                    // Show last page
+                    pageItems.Add(totalPages);
+                }
+            }
+            
+            @foreach (var item in pageItems)
+            {
+                if (item is int pageNum)
+                {
+                    if (pageNum == currentPage)
+                    {
+                        <li class="page-item active">
+                            <span class="page-link">@pageNum</span>
+                        </li>
+                    }
+                    else
+                    {
+                        var pageRouteValues = new System.Dynamic.ExpandoObject();
+                        var pageDict = (IDictionary<string, object>)pageRouteValues;
+                        foreach (var kvp in routeDict)
+                        {
+                            pageDict[kvp.Key] = kvp.Value;
+                        }
+                        pageDict["page"] = pageNum;
+                        pageDict["pageSize"] = pageSize;
+                        
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action(action, controller, pageRouteValues)">@pageNum</a>
+                        </li>
+                    }
+                }
+                else if (item is string ellipsis)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">@ellipsis</span>
+                    </li>
+                }
+            }
+
+            <!-- Next -->
+            @if (currentPage < totalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@Url.Action(action, controller, nextRouteValues)" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            }
+            else
+            {
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+            }
+        </ul>
+    </nav>
+}
