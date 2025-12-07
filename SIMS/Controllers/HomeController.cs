@@ -55,15 +55,25 @@ namespace SIMS.Controllers
                         return new
                         {
                             TotalStudents = await _context.Students.CountAsync(),
+                            TotalCourses = await _context.Courses.CountAsync(),
                             TotalLecturers = await _context.Lecturers.CountAsync(),
                             TotalAdmins = await _context.Admins.CountAsync(),
-                            TotalUsers = await _context.Users.CountAsync()
+                            TotalUsers = await _context.Users.CountAsync(),
+                            TotalDepartments = await _context.Departments.CountAsync(),
+                            TotalMajors = await _context.Majors.CountAsync(),
+                            TotalSubjects = await _context.Subjects.CountAsync(),
+                            TotalSemesters = await _context.Semesters.CountAsync()
                         };
                     });
                     ViewBag.TotalStudents = adminStats!.TotalStudents;
+                    ViewBag.TotalCourses = adminStats.TotalCourses;
                     ViewBag.TotalLecturers = adminStats.TotalLecturers;
                     ViewBag.TotalAdmins = adminStats.TotalAdmins;
                     ViewBag.TotalUsers = adminStats.TotalUsers;
+                    ViewBag.TotalDepartments = adminStats.TotalDepartments;
+                    ViewBag.TotalMajors = adminStats.TotalMajors;
+                    ViewBag.TotalSubjects = adminStats.TotalSubjects;
+                    ViewBag.TotalSemesters = adminStats.TotalSemesters;
                     break;
                 case "lecturer":
                     var lecturer = await _context.Lecturers.FirstOrDefaultAsync(l => l.UserId == user.Id);
@@ -86,7 +96,7 @@ namespace SIMS.Controllers
                     break;
             }
 
-            return View();
+            return View("~/Views/Admin/Dashboard.cshtml");
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
