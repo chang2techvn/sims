@@ -1607,7 +1607,7 @@ input[type="submit"].btn-primary:hover {
 
 #coursesTable th:nth-child(2),
 #coursesTable td:nth-child(2) {
-    width: 140px; /* Course Name */
+    width: 180px; /* Course Name */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -1623,7 +1623,7 @@ input[type="submit"].btn-primary:hover {
 
 #coursesTable th:nth-child(4),
 #coursesTable td:nth-child(4) {
-    width: 140px; /* Semester */
+    width: 80px; /* Semester */
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
