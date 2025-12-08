@@ -66,6 +66,12 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddScoped<IHomeService, HomeService>();
 
+// Register Dashboard Strategies
+builder.Services.AddScoped<AdminDashboardStrategy>();
+builder.Services.AddScoped<LecturerDashboardStrategy>();
+builder.Services.AddScoped<StudentDashboardStrategy>();
+builder.Services.AddScoped<DashboardStrategyFactory>();
+
 var app = builder.Build();
 
 // Ensure database is created

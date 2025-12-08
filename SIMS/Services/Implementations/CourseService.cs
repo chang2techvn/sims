@@ -5,13 +5,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SIMS.Services.Implementations
 {
-    public class CourseService : ICourseService
+    public class CourseService : GenericRepository<Course>, ICourseService
     {
-        private readonly ApplicationDbContext _context;
-
         public CourseService(ApplicationDbContext context)
+            : base(context)
         {
-            _context = context;
         }
 
         public async Task<List<Course>> GetAllCoursesAsync()

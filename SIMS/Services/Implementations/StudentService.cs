@@ -6,14 +6,13 @@ using SIMS.Services.Interfaces;
 
 namespace SIMS.Services.Implementations
 {
-    public class StudentService : IStudentService
+    public class StudentService : GenericRepository<Student>, IStudentService
     {
-        private readonly ApplicationDbContext _context;
         private readonly UserManager<User> _userManager;
 
         public StudentService(ApplicationDbContext context, UserManager<User> userManager)
+            : base(context)
         {
-            _context = context;
             _userManager = userManager;
         }
 
