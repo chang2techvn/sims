@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-run id="0" runstate="Runnable" testcasecount="10" result="Passed" total="0" passed="0" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="0" engine-version="3.21.0.0" clr-version="8.0.20" start-time="2025-12-09 08:38:38Z" end-time="2025-12-09 08:38:38Z" duration="0.532041">
+  <command-line><![CDATA[C:\Users\Chang\.dotnet\tools\.store\nunit.consolerunner.netcore\3.21.0\nunit.consolerunner.netcore\3.21.0\tools\net8.0\any\nunit3-console.dll bin/Debug/net8.0/SIMS.Tests.dll --test=AT01_AutoLoginCheck]]></command-line>
+  <filter>
+    <test>AT01_AutoLoginCheck</test>
+  </filter>
+  <test-suite type="Assembly" id="1-1011" name="SIMS.Tests.dll" fullname="C:/Users/Chang/source/repos/SIMS/SIMS.Tests/bin/Debug/net8.0/SIMS.Tests.dll" runstate="Runnable" testcasecount="10" result="Passed" start-time="2025-12-09T08:38:38.7472327Z" end-time="2025-12-09T08:38:38.7523967Z" duration="0.005281" total="0" passed="0" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="0">
+    <environment framework-version="3.13.2.0" clr-version="8.0.20" os-version="Microsoft Windows 10.0.19045" platform="Win32NT" cwd="C:\Users\Chang\source\repos\SIMS\SIMS.Tests" machine-name="DESKTOP-I11JMKJ" user="Chang" user-domain="DESKTOP-I11JMKJ" culture="en-US" uiculture="en-US" os-architecture="x64" />
+    <settings>
+      <setting name="DisposeRunners" value="True" />
+      <setting name="WorkDirectory" value="C:\Users\Chang\source\repos\SIMS\SIMS.Tests" />
+      <setting name="NumberOfTestWorkers" value="56" />
+    </settings>
+    <properties>
+      <property name="_PID" value="32916" />
+      <property name="_APPDOMAIN" value="nunit3-console" />
+    </properties>
+  </test-suite>
+</test-run>
