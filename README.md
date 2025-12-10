@@ -5,9 +5,7 @@ A modern student information management system built with ASP.NET Core 8.0, Enti
 ## 🌟 Key Features
 
 ### 👨‍🎓 Students
-- Account registration and login
 - View list of enrolled courses
-- Search and enroll in new courses
 - Manage personal information
 
 ### 👨‍🏫 Lecturers
@@ -27,14 +25,17 @@ A modern student information management system built with ASP.NET Core 8.0, Enti
 
 ### Admin Dashboard
 ![Admin Dashboard](images/admin-dashboard.png)
+
 *Main dashboard for administrators showing user management and system statistics.*
 
 ### Student Dashboard
 ![Student Dashboard](images/student-dashboard.png)
+
 *Student interface for course enrollment and personal information management.*
 
 ### Lecturer Dashboard
 ![Lecturer Dashboard](images/lecturer-dashboard.png)
+
 *Lecturer portal for managing assigned courses and student lists.*
 
 ## 🎨 Design and UX
