@@ -1,70 +1,88 @@
 # SIMS - Student Information Management System
 
-Hệ thống quản lý thông tin sinh viên hiện đại được xây dựng với ASP.NET Core 8.0, Entity Framework Core và SQL Server.
+A modern student information management system built with ASP.NET Core 8.0, Entity Framework Core, and SQL Server.
 
-## 🌟 Tính năng chính
+## 🌟 Key Features
 
-### 👨‍🎓 Sinh viên (Students)
-- Đăng ký tài khoản và đăng nhập
-- Xem danh sách môn học đã đăng ký
-- Tìm kiếm và đăng ký môn học mới
-- Quản lý thông tin cá nhân
+### 👨‍🎓 Students
+- Account registration and login
+- View list of enrolled courses
+- Search and enroll in new courses
+- Manage personal information
 
-### 👨‍🏫 Giảng viên (Lecturers)
-- Xem danh sách môn học được phân công
-- Quản lý danh sách sinh viên trong lớp
-- Theo dõi thống kê lớp học
-- Cập nhật thông tin cá nhân
+### 👨‍🏫 Lecturers
+- View assigned course list
+- Manage student lists in classes
+- Track class statistics
+- Update personal information
 
-### 👨‍💼 Quản trị viên (Administrators)
-- Quản lý người dùng (sinh viên, giảng viên, admin)
-- Quản lý khoa, chuyên ngành
-- Quản lý học kỳ và môn học
-- Quản lý khóa học và phân công giảng viên
-- Gán sinh viên vào các khóa học
+### 👨‍💼 Administrators
+- Manage users (students, lecturers, admins)
+- Manage departments and majors
+- Manage semesters and subjects
+- Manage courses and assign lecturers
+- Assign students to courses
 
-## 🎨 Thiết kế và UX
+## 📸 Screenshots
 
-- **Giao diện hiện đại** với theme màu cam chuyên nghiệp
-- **Sidebar navigation** với menu phân quyền theo vai trò
-- **Responsive design** tương thích mọi thiết bị
-- **Dashboard thống kê** trực quan cho từng vai trò
-- **Animations và transitions** mượt mà
-- **Form validation** thời gian thực
+### Admin Dashboard
+![Admin Dashboard](images/admin-dashboard.png)
+*Main dashboard for administrators showing user management and system statistics.*
 
-## 🏗️ Kiến trúc hệ thống
+### Student Dashboard
+![Student Dashboard](images/student-dashboard.png)
+*Student interface for course enrollment and personal information management.*
+
+### Lecturer Dashboard
+![Lecturer Dashboard](images/lecturer-dashboard.png)
+*Lecturer portal for managing assigned courses and student lists.*
+
+## 🎨 Design and UX
+
+- **Modern interface** with professional orange theme
+- **Sidebar navigation** with role-based menu permissions
+- **Responsive design** compatible with all devices
+- **Intuitive dashboard statistics** for each role
+- **Smooth animations and transitions**
+- **Real-time form validation**
+
+## 🏗️ System Architecture
 
 ```
 SIMS/
-├── Controllers/           # Controllers xử lý logic nghiệp vụ
-│   ├── AccountController  # Xác thực và quản lý tài khoản
-│   ├── AdminController    # Chức năng quản trị
-│   ├── HomeController     # Dashboard và trang chủ
-│   ├── StudentController  # Chức năng sinh viên
-│   └── LecturerController # Chức năng giảng viên
-├── Models/               # Data models và ViewModels
+├── Controllers/           # Controllers handling business logic
+│   ├── AccountController  # Authentication and account management
+│   ├── AdminController    # Administrative functions
+│   ├── HomeController     # Dashboard and home page
+│   ├── StudentController  # Student functionality
+│   └── LecturerController # Lecturer functionality
+├── Models/               # Data models and ViewModels
 │   ├── Academic.cs       # Course, Subject, Semester
 │   ├── User.cs           # User authentication
 │   ├── UserRoles.cs      # Student, Lecturer, Admin
-│   └── ViewModels/       # DTOs cho Views
+│   └── ViewModels/       # DTOs for Views
 ├── Views/                # Razor Views
 │   ├── Account/          # Login, Register, Profile
 │   ├── Admin/            # Admin management views
 │   ├── Student/          # Student functionality views
 │   ├── Lecturer/         # Lecturer functionality views
-│   └── Shared/           # Layout và shared views
+│   └── Shared/           # Layout and shared views
+├── Services/             # Business logic services
+│   ├── Implementations/  # Service implementations
+│   └── Interfaces/       # Service interfaces
 ├── Data/                 # Database Context
+├── Migrations/           # EF Core migrations
 └── wwwroot/              # Static files (CSS, JS, Images)
 ```
 
-## 🔧 Cấu hình và cài đặt
+## 🔧 Configuration and Installation
 
-### Yêu cầu hệ thống
+### System Requirements
 - .NET 8.0 SDK
-- SQL Server hoặc SQL Server LocalDB
-- Visual Studio 2022 hoặc VS Code
+- SQL Server or SQL Server LocalDB
+- Visual Studio 2022 or VS Code
 
-### Hướng dẫn cài đặt
+### Installation Guide
 
 1. **Clone repository**
    ```bash
@@ -78,9 +96,9 @@ SIMS/
    dotnet restore
    ```
 
-3. **Cấu hình database**
-   - Mở file `SIMS/appsettings.json`
-   - Cập nhật connection string:
+3. **Configure database**
+   - Open file `SIMS/appsettings.json`
+   - Update connection string:
    ```json
    {
      "ConnectionStrings": {
@@ -89,39 +107,39 @@ SIMS/
    }
    ```
 
-4. **Cài đặt Entity Framework Tools**
+4. **Install Entity Framework Tools**
    ```bash
    dotnet tool install --global dotnet-ef
    ```
 
-5. **Tạo database**
+5. **Create database**
    ```bash
    dotnet ef migrations add InitialCreate
    dotnet ef database update
    ```
 
-6. **Chạy ứng dụng**
+6. **Run application**
    ```bash
    dotnet run
    ```
 
-7. **Mở browser và truy cập**: `https://localhost:5001` hoặc `http://localhost:5000`
+7. **Open browser and access**: `https://localhost:5001` or `http://localhost:5000`
 
 ## 📊 Database Schema
 
-### Bảng chính
-- **Users**: Thông tin người dùng (AspNetUsers)
-- **Students**: Thông tin sinh viên
-- **Lecturers**: Thông tin giảng viên  
-- **Admins**: Thông tin quản trị viên
-- **Departments**: Khoa
-- **Majors**: Chuyên ngành
-- **Subjects**: Môn học
-- **Semesters**: Học kỳ
-- **Courses**: Khóa học
-- **StudentCourses**: Đăng ký môn học
+### Main Tables
+- **Users**: User information (AspNetUsers)
+- **Students**: Student information
+- **Lecturers**: Lecturer information
+- **Admins**: Admin information
+- **Departments**: Departments
+- **Majors**: Majors
+- **Subjects**: Subjects
+- **Semesters**: Semesters
+- **Courses**: Courses
+- **StudentCourses**: Course enrollments
 
-### Quan hệ
+### Relationships
 - User 1:1 Student/Lecturer/Admin
 - Department 1:N Major
 - Major 1:N Student
@@ -129,40 +147,40 @@ SIMS/
 - Lecturer 1:N Course
 - Student N:N Course (through StudentCourse)
 
-## 🔐 Bảo mật
+## 🔐 Security
 
-- **ASP.NET Identity**: Xác thực và phân quyền
-- **Role-based authorization**: Phân quyền theo vai trò
-- **Password hashing**: Mã hóa mật khẩu
-- **CSRF protection**: Bảo vệ chống tấn công CSRF
-- **Input validation**: Kiểm tra dữ liệu đầu vào
+- **ASP.NET Identity**: Authentication and authorization
+- **Role-based authorization**: Permission by roles
+- **Password hashing**: Password encryption
+- **CSRF protection**: Protection against CSRF attacks
+- **Input validation**: Input data validation
 
-## 🎯 Tài khoản mặc định
+## 🎯 Default Accounts
 
-Sau khi chạy migration, bạn có thể tạo tài khoản admin đầu tiên thông qua trang đăng ký.
+After running migrations, you can create the first admin account through the registration page.
 
-### Vai trò hệ thống:
-- **admin**: Toàn quyền quản trị
-- **lecturer**: Quản lý lớp học được phân công
-- **student**: Đăng ký và theo dõi môn học
+### System Roles:
+- **admin**: Full administrative privileges
+- **lecturer**: Manage assigned classes
+- **student**: Enroll and track courses
 
-## 🚀 Tính năng nâng cao
+## 🚀 Advanced Features
 
-- **Real-time validation**: Kiểm tra form theo thời gian thực
-- **Auto-save**: Tự động lưu thay đổi
-- **Search và filter**: Tìm kiếm trong bảng dữ liệu
-- **Export data**: Xuất dữ liệu CSV
-- **Responsive sidebar**: Menu bên trái tương thích mobile
-- **Toast notifications**: Thông báo trực quan
-- **Loading states**: Hiệu ứng loading chuyên nghiệp
+- **Real-time validation**: Real-time form checking
+- **Auto-save**: Automatic saving of changes
+- **Search and filter**: Search within data tables
+- **Export data**: Export data to CSV
+- **Responsive sidebar**: Mobile-compatible left menu
+- **Toast notifications**: Intuitive notifications
+- **Loading states**: Professional loading effects
 
-## 📱 Tương thích
+## 📱 Compatibility
 
 - **Desktop**: Windows, macOS, Linux
 - **Mobile**: iOS, Android (responsive)
 - **Browsers**: Chrome, Firefox, Safari, Edge
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Technologies Used
 
 - **Backend**: ASP.NET Core 8.0, Entity Framework Core
 - **Database**: SQL Server
@@ -171,30 +189,30 @@ Sau khi chạy migration, bạn có thể tạo tài khoản admin đầu tiên 
 - **Icons**: Font Awesome 6
 - **Fonts**: Google Fonts (Inter)
 
-## 📝 Ghi chú phát triển
+## 📝 Development Notes
 
-- Tuân thủ SOLID principles
+- Follows SOLID principles
 - Clean code architecture
-- Repository pattern có thể được thêm vào
-- Unit testing có thể được mở rộng
-- Logging và monitoring có thể được thêm vào
+- Repository pattern can be added
+- Unit testing can be expanded
+- Logging and monitoring can be added
 
-## 🤝 Đóng góp
+## 🤝 Contributing
 
-1. Fork repository
-2. Tạo feature branch
+1. Fork the repository
+2. Create a feature branch
 3. Commit changes
 4. Push to branch
-5. Tạo Pull Request
+5. Create Pull Request
 
-## 📄 Giấy phép
+## 📄 License
 
-MIT License - xem file LICENSE để biết chi tiết.
+MIT License - see LICENSE file for details.
 
-## 📞 Hỗ trợ
+## 📞 Support
 
-Nếu gặp vấn đề trong quá trình cài đặt hoặc sử dụng, vui lòng tạo issue trong repository.
+If you encounter issues during installation or usage, please create an issue in the repository.
 
 ---
 
-**SIMS** - Hệ thống quản lý thông tin sinh viên hiện đại và chuyên nghiệp! 🎓✨
+**SIMS** - Modern and professional student information management system! 🎓✨
